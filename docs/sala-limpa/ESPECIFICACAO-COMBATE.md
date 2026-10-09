@@ -1,6 +1,6 @@
 # Especificação Funcional — Combate de Fluxo Livre
 
-**Status:** aprovada para implementação · protótipo 01
+**Status:** aprovada para implementação · protótipo 01, ampliada no protótipo 02 (seção 7-A)
 **Fonte:** convenções públicas do gênero de ação corpo a corpo em terceira pessoa, descritas em linguagem própria. Nenhum valor, arte ou texto foi extraído de jogo de terceiros.
 
 > Esta especificação descreve **ideias e regras de jogo**, matéria não protegida nos termos da Lei nº 9.610/1998, art. 8º, I e II. Todos os elementos de **expressão** (nomes, aparência, sinais visuais, sons e valores numéricos) foram criados para este projeto.
@@ -74,6 +74,29 @@ Vence a maior pontuação.
    - dá 0,9 s de invulnerabilidade.
 5. **Comando de contra-ataque sem ameaça:** gera 0,32 s de recuperação. Isso desestimula apertar o botão sem critério.
 
+## 7-A. Armas de fogo (protótipo 02)
+
+1. **Escolha do ataque.** Ao receber uma ficha, o inimigo armado decide entre:
+   - **corpo a corpo** (coronhada), regra da seção 6;
+   - **disparo**, só se estiver a mais de 2,2 m. Preferência de disparo por personagem: Ricci 70 %, Moretti 50 %, Vittore 45 %.
+2. **Aviso de disparo (expressão própria, distinta do 危).**
+   - Acende sobre o atirador o ideograma **閃** ("esquivar") dentro de um círculo, em ciano-branco.
+   - Uma linha de mira vermelha liga a arma ao protagonista e fica mais intensa conforme o disparo se aproxima.
+   - Um anel ciano se contrai **sob os pés do protagonista**.
+3. **Mira travada.** No instante do primeiro disparo, a direção é fixada. Cada projétil sai nessa direção com dispersão de ±0,03 rad. Sair da linha de tiro (esquiva) evita o dano, além da invulnerabilidade da própria esquiva.
+
+   | Arma | Mira | Disparos | Intervalo | Dano por acerto |
+   |---|---|---|---|---|
+   | Submetralhadora (Ricci) | 0,90 s | 6 | 0,075 s | 5 |
+   | Submetralhadora (Vittore) | 1,00 s | 5 | 0,075 s | 5 |
+   | Pistola (Moretti) | 0,75 s | 2 | 0,22 s | 9 |
+
+4. **Acerto.** O projétil atinge se passar a menos de 0,38 m do tronco do protagonista e ele não estiver invulnerável.
+5. **Interrupção.** Golpear o atirador durante a mira ou o disparo interrompe o ataque.
+6. **Contra-ataque não se aplica a disparos.** Usá-lo durante a mira gera a recuperação de comando sem ameaça.
+7. **Recompensa.** Escapar de uma rajada inteira mostra "ESQUIVA" e não quebra o combo.
+8. **Chefe.** Don Vittore tem 10 pontos de vida e barra própria na interface.
+
 ## 7. Esquiva
 
 - Rolamento de 0,46 s na direção informada; sem direção, para trás.
@@ -107,7 +130,7 @@ Respeita-se a preferência do sistema por movimento reduzido: tremor e pulso sã
 | Mover | WASD / setas | Analógico esquerdo | Joystick virtual |
 | Atacar | J / clique esquerdo | Botão oeste (□ / X) | ATACAR |
 | Contra-atacar | K / clique direito | Botão norte (△ / Y) | CONTRA |
-| Esquivar | Espaço / L | Botão sul (✕ / A) | ESQUIVA |
+| Esquivar (inclusive de disparos) | Espaço / L | Botão sul (✕ / A) | ESQUIVA |
 | Finalizar | F / I | Botão leste (○ / B) | FINAL |
 | Câmera | Q / E | Analógico direito | — |
 
