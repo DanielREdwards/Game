@@ -1,9 +1,9 @@
-// Família Vittore: rondam em círculo, atacam um por vez (fichas de ataque) e anunciam cada golpe.
-// 危 = golpe corpo a corpo (contra-atacar). 閃 = disparo (esquivar).
+// Família Vittore: chefes armados e soldados de rua. Rondam em círculo, atacam um por vez (fichas de
+// ataque) e anunciam cada golpe. 危 = golpe corpo a corpo (contra-atacar). 閃 = disparo (esquivar).
 import * as THREE from 'three';
 import { Fighter } from './fighter.js';
 import {
-  E_WIND, E_STRIKE, B_WIND, B_STRIKE, HIT_HEAD, HIT_BODY, E_TAUNT, G_STANCE, G_AIM, P_STANCE, P_AIM,
+  E_WIND, E_STRIKE, B_WIND, B_STRIKE, HIT_HEAD, HIT_BODY, E_TAUNT, E_STANCE, G_STANCE, G_AIM, P_STANCE, P_AIM,
   lerpPose, idlePose, shufflePose, runPose,
 } from './poses.js';
 import { clamp, damp, rand, flatDist, smooth } from './util.js';
@@ -12,29 +12,37 @@ const tmp = new THREE.Vector3();
 const tmp2 = new THREE.Vector3();
 const tmp3 = new THREE.Vector3();
 
-const KINDS = {
+export const KINDS = {
   vittore: {
-    hp: 10, scale: 1.01, wind: 1.0, dmg: 18, speed: 3.9, melee: [B_WIND, B_STRIKE], stance: G_STANCE, aimPose: G_AIM,
+    hp: 12, scale: 1.01, wind: 1.0, dmg: 18, speed: 3.9, melee: [B_WIND, B_STRIKE], stance: G_STANCE, aimPose: G_AIM,
     shoot: 0.45, aim: 1.0, shots: 5, every: 0.075, bullet: 5, ring: [3.4, 4.6], boss: true,
   },
   moretti: {
-    hp: 6, scale: 0.99, wind: 0.75, dmg: 12, speed: 5.2, melee: [E_WIND, E_STRIKE], stance: P_STANCE, aimPose: P_AIM,
+    hp: 7, scale: 0.99, wind: 0.75, dmg: 12, speed: 5.2, melee: [E_WIND, E_STRIKE], stance: P_STANCE, aimPose: P_AIM,
     shoot: 0.5, aim: 0.75, shots: 2, every: 0.22, bullet: 9, ring: [2.8, 3.8],
   },
   ricci: {
-    hp: 7, scale: 1.03, wind: 0.9, dmg: 14, speed: 4.4, melee: [E_WIND, E_STRIKE], stance: G_STANCE, aimPose: G_AIM,
+    hp: 8, scale: 1.03, wind: 0.9, dmg: 14, speed: 4.4, melee: [E_WIND, E_STRIKE], stance: G_STANCE, aimPose: G_AIM,
     shoot: 0.7, aim: 0.9, shots: 6, every: 0.075, bullet: 5, ring: [3.8, 5.0],
   },
+  // soldados (especificação de combate, seção 14): todos os golpes são contra-atacáveis
+  soldato: { hp: 4, scale: 0.99, wind: 0.85, dmg: 12, speed: 4.6, melee: [E_WIND, E_STRIKE], stance: E_STANCE, shoot: 0, ring: [2.6, 3.6], soldier: true },
+  soldato2: { hp: 4, scale: 1.0, wind: 0.85, dmg: 12, speed: 4.7, melee: [E_WIND, E_STRIKE], stance: E_STANCE, shoot: 0, ring: [2.6, 3.6], soldier: true },
+  piper: { hp: 5, scale: 1.0, wind: 0.95, dmg: 16, speed: 4.4, melee: [E_WIND, E_STRIKE], stance: E_STANCE, shoot: 0, ring: [2.8, 3.8], soldier: true, drop: 'pipe' },
+  brute: { hp: 8, scale: 1.06, wind: 1.2, dmg: 20, speed: 3.3, melee: [B_WIND, B_STRIKE], stance: E_STANCE, shoot: 0, ring: [2.4, 3.2], soldier: true, heavy: true },
 };
 
 export class Enemy extends Fighter {
-  constructor(game, kind, spawn, index) {
+  // opts: { index, goal (para onde caminha ao entrar), duel (espera o confronto) }
+  constructor(game, kind, spawn, opts = {}) {
     super(game, game.looks[kind], KINDS[kind].scale);
     this.kind = kind;
     this.cfg = KINDS[kind];
     this.name = game.looks[kind].name;
-    this.index = index;
+    this.index = opts.index || 0;
     this.spawn = new THREE.Vector3(...spawn);
+    this.goal = opts.goal ? new THREE.Vector3(...opts.goal) : null;
+    this.waitDuel = !!opts.duel;
     this.stance = this.cfg.stance;
     this.radius = 0.42 * this.scale;
     this.vel = new THREE.Vector3();
@@ -57,9 +65,17 @@ export class Enemy extends Fighter {
     this.reset();
   }
 
+  dispose() {
+    const s = this.game.scene;
+    s.remove(this.root, this.rig.shadow, this.tele, this.ring, this.sight);
+    this.rig.mesh.skeleton?.dispose?.();
+    this.disposed = true;
+  }
+
   reset() {
+    const pl = this.game.player;
     this.pos.copy(this.spawn);
-    this.yaw = Math.atan2(-this.spawn.x, 3.6 - this.spawn.z);
+    this.yaw = Math.atan2(pl.pos.x - this.pos.x, pl.pos.z - this.pos.z);
     this.hp = this.cfg.hp;
     this.token = false;
     this.vel.set(0, 0, 0);
@@ -70,19 +86,20 @@ export class Enemy extends Fighter {
     this.smokeT = rand(0, 1);
     this.rig.tilt.rotation.x = 0;
     this.flash = 0;
-    this.setState('intro');
+    this.koT = 0;
+    this.setState(this.goal ? 'enter' : 'intro');
     this.hideTelegraph();
   }
 
   get targetable() {
-    return this.hp > 0 && !['knockdown', 'down', 'getup', 'ko'].includes(this.state);
+    return this.hp > 0 && !['knockdown', 'down', 'getup', 'ko', 'duel'].includes(this.state);
   }
-  get solid() { return this.targetable || this.state === 'stagger'; }
+  get solid() { return this.targetable || this.state === 'stagger' || this.state === 'duel'; }
 
   giveToken() {
     this.token = true;
     const d = flatDist(this.pos, this.game.player.pos);
-    if (d > 2.2 && Math.random() < this.cfg.shoot) {
+    if (this.cfg.shoot && d > 2.2 && Math.random() < this.cfg.shoot) {
       this.setState('aim');
       this.game.sfx.cock();
     } else this.setState('approach');
@@ -103,23 +120,48 @@ export class Enemy extends Fighter {
     this.tele.visible = this.ring.visible = this.sight.visible = false;
   }
 
+  // Entra na luta (sai da espera do confronto ou da caminhada de entrada).
+  engage() {
+    if (['enter', 'standby', 'intro'].includes(this.state)) this.setState('circle');
+  }
+
   takeHit(attacker, move) {
     const g = this.game;
-    this.hp -= move.dmg;
+    // a finalização derruba qualquer soldado, mas só fere os chefes
+    this.hp -= this.cfg.boss && move.dmg > 50 ? 6 : move.dmg;
     this.flash = 1;
-    this.releaseToken();
-    this.hideTelegraph();
     if (this.cfg.boss) g.hud.boss(Math.max(0, this.hp) / this.cfg.hp);
     if (this.hp <= 0 || move.knock) {
+      this.releaseToken();
+      this.hideTelegraph();
       this.beginFall(attacker.pos, move.dmg > 50 ? 7 : 5);
       this.setState('knockdown');
-      if (this.hp <= 0) g.onEnemyDown(this);
+      if (this.hp <= 0) this.die();
       return;
     }
+    // golpe já comprometido (ou brutamontes contra golpe leve): sente o dano, mas não para —
+    // só o contra-ataque interrompe
+    const committed = this.state === 'windup' && this.t > this.cfg.wind * 0.3;
+    const armored = this.cfg.heavy && !move.heavy && !move.weapon && ['circle', 'approach', 'windup', 'recover'].includes(this.state);
+    if (committed || armored) {
+      g.fx.impact(this.rig.world('chest', tmp), { color: [2.4, 2.4, 2.6], count: 6, speed: 2 });
+      return;
+    }
+    this.releaseToken();
+    this.hideTelegraph();
     this.face(attacker.pos, 1000, 1);
     this.forward(this.kb).multiplyScalar(-(move.kb || 0.3) * 7);
     this.hitPose = move.hitY < 1.2 ? HIT_BODY : HIT_HEAD;
     this.setState('hit');
+  }
+
+  die() {
+    const g = this.game;
+    if (this.cfg.drop && this.rig.weapon) {
+      this.rig.setWeapon(null);
+      g.pickups?.drop(this.cfg.drop, this.pos);
+    }
+    g.onEnemyDown(this);
   }
 
   // Empurrão sem dano (onda de choque da finalização).
@@ -135,14 +177,41 @@ export class Enemy extends Fighter {
     this.t += dt;
     const dist = flatDist(this.pos, pl.pos);
     switch (this.state) {
+      case 'enter': {
+        // caminha até a posição de chegada; engaja se o protagonista chegar perto
+        tmp.subVectors(this.goal, this.pos).setY(0);
+        const d = tmp.length();
+        const run = d > 3 ? 1 : 0.55;
+        if (d > 0.3) {
+          tmp.divideScalar(d);
+          this.pos.addScaledVector(tmp, Math.min(d, (run > 0.9 ? this.cfg.speed * 0.8 : 2.0) * dt));
+          this.yaw = Math.atan2(tmp.x, tmp.z);
+          this.phase += dt * (8 + run * 7);
+          runPose(this.phase, run * 0.8, this.pose);
+          this.sharp = 12;
+        } else {
+          this.setState(this.waitDuel ? 'standby' : this.cfg.boss || this.kind === 'moretti' || this.kind === 'ricci' ? 'intro' : 'circle');
+        }
+        if (!this.waitDuel && dist < 4.5 && g.state === 'play') this.setState('circle');
+        break;
+      }
+      case 'standby': {
+        this.face(pl.pos, 5, dt);
+        lerpPose(E_TAUNT, this.stance, smooth(clamp(this.t / 0.8, 0, 1)), this.pose);
+        idlePose(this.pose, this.t + this.index, this.pose);
+        this.sharp = 8;
+        break;
+      }
       case 'intro': {
         this.face(pl.pos, 4, dt);
         lerpPose(E_TAUNT, this.stance, smooth(clamp((this.t - 0.6 - this.index * 0.3) / 0.6, 0, 1)), this.pose);
         idlePose(this.pose, this.t + this.index, this.pose);
         this.sharp = 8;
-        if (g.state === 'play' && this.t > 1.4 + this.index * 0.3) this.setState('circle');
+        if (g.state === 'play' && g.fighting && this.t > 1.4 + this.index * 0.3) this.setState('circle');
         break;
       }
+      case 'duel':
+        break;
       case 'circle': {
         this.face(pl.pos, 7, dt);
         if ((this.strafeT -= dt) <= 0) {
@@ -153,14 +222,15 @@ export class Enemy extends Fighter {
         tmp.subVectors(pl.pos, this.pos).setY(0).normalize();
         const radial = clamp(dist - this.ringDist, -1, 1);
         tmp2.set(-tmp.z, 0, tmp.x).multiplyScalar(this.strafe * 1.2);
-        tmp2.addScaledVector(tmp, radial * 2.0);
+        tmp2.addScaledVector(tmp, radial * (dist > 7 ? 3.2 : 2.0));
         this.vel.x = damp(this.vel.x, tmp2.x, 5, dt);
         this.vel.z = damp(this.vel.z, tmp2.z, 5, dt);
         if (!pl.alive || g.state !== 'play') this.vel.multiplyScalar(0.9);
         this.pos.addScaledVector(this.vel, dt);
         const sp = this.vel.length();
         this.phase += dt * (4 + sp * 3);
-        shufflePose(idlePose(this.stance, this.t + this.index), this.phase, clamp(sp / 1.6, 0, 1), this.pose);
+        if (sp > 2.4) runPose(this.phase * 1.4, clamp(sp / 5, 0.5, 0.9), this.pose);
+        else shufflePose(idlePose(this.stance, this.t + this.index), this.phase, clamp(sp / 1.6, 0, 1), this.pose);
         this.sharp = 12;
         break;
       }
@@ -195,11 +265,11 @@ export class Enemy extends Fighter {
           this.hideTelegraph();
           this.setState('strike');
           this.forward(this.kb).multiplyScalar(3.5);
-          g.sfx.whoosh(this.kind === 'vittore');
+          g.sfx.whoosh(this.cfg.boss || this.cfg.heavy);
           tmp.subVectors(pl.pos, this.pos).setY(0);
           const d = tmp.length();
           const facing = d > 1e-3 ? tmp.divideScalar(d).dot(this.forward(tmp2)) : 1;
-          if (d < 2.0 && facing > 0.45) pl.takeHit(this, this.cfg.dmg);
+          if (d < 2.0 && facing > 0.45) pl.takeHit(this, this.cfg.dmg, { blunt: this.kind === 'piper' });
         }
         break;
       }
@@ -236,6 +306,7 @@ export class Enemy extends Fighter {
           if (this.dodged && !this.landedShots) {
             g.hud.callout('ESQUIVA', 'jade');
             g.stats.dodged++;
+            pl.gainDet(1);
           }
           this.setState('recover');
         }
@@ -272,10 +343,11 @@ export class Enemy extends Fighter {
         if (this.updateGetup(dt)) this.setState('circle');
         break;
       case 'ko':
+        this.koT += dt;
         break;
     }
     if (this.state === 'strike' || this.state === 'fire') this.prevAttack = this.state;
-    if (this.targetable) this.clampArena();
+    if (this.targetable || this.state === 'duel') this.clampArena();
     this.syncRig(dt);
     if (this.rig.ember && this.hp > 0 && (this.smokeT -= dt) <= 0) {
       this.smokeT = rand(0.25, 0.5);
@@ -286,7 +358,7 @@ export class Enemy extends Fighter {
   // ------------------------------------------------------------ disparos
 
   beginFire() {
-    const pl = this.game.player;
+    const g = this.game, pl = g.player;
     this.rig.muzzle.getWorldPosition(tmp);
     tmp2.set(pl.pos.x, 1.25, pl.pos.z);
     this.aimDir.subVectors(tmp2, tmp).normalize();
@@ -297,6 +369,8 @@ export class Enemy extends Fighter {
     this.landedShots = 0;
     this.hideTelegraph();
     this.setState('fire');
+    // esquiva perfeita: iniciada até 0,15 s antes do primeiro disparo
+    if (pl.state === 'dodge' && pl.t < 0.17) g.onPerfectDodge(this);
   }
 
   fireShot() {
@@ -377,19 +451,21 @@ export class Director {
   }
 
   reset() {
-    this.cool = 2.2;
+    this.cool = 1.6;
+    this.t = 0;
   }
 
   update(dt) {
     const g = this.game, pl = g.player;
-    if (g.state !== 'play' || !pl.alive) return;
+    if (g.state !== 'play' || !pl.alive || !g.fighting) return;
+    this.t += dt;
     if ((this.cool -= dt) > 0) return;
     if (pl.state === 'finisher' || pl.state === 'down') return;
     const alive = g.enemies.filter((e) => e.hp > 0);
     const busy = alive.filter((e) => e.token).length;
-    const max = alive.length >= 3 && g.elapsed > 14 ? 2 : 1;
+    const max = alive.length >= 3 && this.t > 6 ? 2 : 1;
     if (busy >= max) return;
-    const cands = alive.filter((e) => e.state === 'circle');
+    const cands = alive.filter((e) => e.state === 'circle' && flatDist(e.pos, pl.pos) < 12);
     if (!cands.length) return;
     pl.forward(tmp2);
     let total = 0;

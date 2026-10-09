@@ -56,6 +56,26 @@ export function radialTex(stops, size = 128) {
   return toTex(c);
 }
 
+// Pétala (forma de gota com nervura central), branca para ser tingida por instância.
+let PETAL = null;
+export function petalTex() {
+  if (PETAL) return PETAL;
+  const S = 64, c = makeCanvas(S, S), g = c.getContext('2d');
+  g.clearRect(0, 0, S, S);
+  g.translate(S / 2, S / 2);
+  g.fillStyle = '#ffffff';
+  g.beginPath();
+  g.moveTo(0, 28);
+  g.bezierCurveTo(22, 14, 18, -18, 0, -28);
+  g.bezierCurveTo(-18, -18, -22, 14, 0, 28);
+  g.fill();
+  g.strokeStyle = 'rgba(0,0,0,0.18)';
+  g.lineWidth = 2;
+  g.beginPath(); g.moveTo(0, 24); g.lineTo(0, -20); g.stroke();
+  PETAL = toTex(c);
+  return PETAL;
+}
+
 export function smokeTex(rng) {
   const S = 128, c = makeCanvas(S, S), g = c.getContext('2d');
   for (let i = 0; i < 16; i++) {

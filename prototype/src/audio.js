@@ -184,4 +184,131 @@ export class Sfx {
   }
 
   ui() { this.tone('sine', 880, 870, 0.06, 0.06); }
+
+  // ---------------------------------------------------------- determinação, cura e armas do chão
+
+  ready() {
+    this.tone('sine', 1046, 1040, 0.5, 0.07);
+    this.tone('sine', 1568, 1560, 0.6, 0.05, 0.08);
+  }
+
+  focus() {
+    if (!this.ctx) return;
+    const s = this.noise(), t = this.ctx.currentTime;
+    const f = this.filter('bandpass', 400, 0.8);
+    f.frequency.exponentialRampToValueAtTime(900, t + 0.55);
+    const g = this.ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.09, t + 0.4);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.62);
+    s.connect(f).connect(g).connect(this.out);
+    s.start(t, Math.random());
+    s.stop(t + 0.7);
+  }
+
+  healed() {
+    for (const [f, w] of [[523, 0], [784, 0.06], [1046, 0.12]]) this.tone('sine', f, f * 0.995, 0.7, 0.06, w);
+    this.tone('sine', 98, 96, 0.6, 0.2);
+  }
+
+  pickup() {
+    this.burst(0.04, 0.16, 'bandpass', 2400, 1.5);
+    this.tone('triangle', 420, 380, 0.08, 0.06);
+  }
+
+  weaponHit(kind) {
+    if (kind === 'glass') this.tone('triangle', 2200, 1900, 0.12, 0.08);
+    else if (kind === 'wood') { this.tone('sine', 190, 90, 0.12, 0.55); this.burst(0.06, 0.3, 'bandpass', 900, 1.2); }
+    else { this.tone('square', 640, 600, 0.18, 0.06); this.tone('sine', 1720, 1700, 0.35, 0.05); this.tone('sine', 150, 50, 0.15, 0.55); }
+  }
+
+  weaponBreak(kind) {
+    if (kind === 'glass') {
+      this.burst(0.35, 0.5, 'highpass', 3500);
+      for (let i = 0; i < 7; i++) this.tone('sine', 2600 + Math.random() * 3200, 2400, 0.08 + Math.random() * 0.1, 0.05, i * 0.025);
+    } else if (kind === 'wood') {
+      this.burst(0.18, 0.55, 'bandpass', 700, 0.9);
+      this.burst(0.06, 0.35, 'highpass', 2200, 0.7, 0.05);
+    } else {
+      this.tone('sine', 980, 940, 0.9, 0.08);
+      this.tone('sine', 1390, 1350, 0.7, 0.05);
+      this.burst(0.1, 0.25, 'bandpass', 3000, 2);
+    }
+  }
+
+  // ---------------------------------------------------------- ondas e confronto
+
+  // Tambor grave em três batidas (abertura de onda).
+  drum() {
+    for (const [w, v] of [[0, 0.9], [0.32, 0.6], [0.5, 1.0]]) {
+      this.tone('sine', 110, 38, 0.6, v, w);
+      this.burst(0.08, 0.25 * v, 'lowpass', 500, 0.7, w);
+    }
+  }
+
+  // Gongo ao vencer uma onda.
+  gong() {
+    for (const [f, v] of [[196, 0.22], [293.7, 0.1], [415, 0.07], [622, 0.04]]) this.tone('sine', f, f * 0.98, 2.6, v);
+    this.burst(0.5, 0.06, 'bandpass', 1200, 0.6);
+  }
+
+  // Rajada de vento (vento-guia e confronto).
+  gust(vol = 0.12) {
+    if (!this.ctx) return;
+    const s = this.noise(), t = this.ctx.currentTime;
+    const f = this.filter('bandpass', 300, 0.6);
+    f.frequency.exponentialRampToValueAtTime(1100, t + 0.9);
+    f.frequency.exponentialRampToValueAtTime(380, t + 2.2);
+    const g = this.ctx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + 0.8);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 2.4);
+    s.connect(f).connect(g).connect(this.out);
+    s.start(t, Math.random());
+    s.stop(t + 2.5);
+  }
+
+  // Tensão do confronto: zumbido grave que cresce até o golpe; a trilha se cala.
+  tension(on) {
+    if (!this.ctx) return;
+    const t = this.ctx.currentTime;
+    this.mus.gain.setTargetAtTime(on ? 0.0 : 0.55, t, 0.4);
+    if (on && !this.ten) {
+      const o = this.ctx.createOscillator(), o2 = this.ctx.createOscillator();
+      o.type = 'sine'; o.frequency.value = 55;
+      o2.type = 'sine'; o2.frequency.value = 55.6;
+      const g = this.ctx.createGain();
+      g.gain.setValueAtTime(0.0001, t);
+      g.gain.exponentialRampToValueAtTime(0.16, t + 2.5);
+      o.connect(g); o2.connect(g); g.connect(this.out);
+      o.start(); o2.start();
+      this.ten = { o, o2, g };
+    } else if (!on && this.ten) {
+      const { o, o2, g } = this.ten;
+      g.gain.setTargetAtTime(0.0001, t, 0.15);
+      o.stop(t + 0.8); o2.stop(t + 0.8);
+      this.ten = null;
+    }
+  }
+
+  glint() {
+    this.tone('sine', 2637, 2630, 0.5, 0.09);
+    this.tone('sine', 3951, 3940, 0.4, 0.05, 0.02);
+  }
+
+  feint() {
+    this.burst(0.06, 0.18, 'lowpass', 900);
+    this.tone('sine', 90, 60, 0.1, 0.25);
+  }
+
+  slash() {
+    if (!this.ctx) return;
+    const s = this.noise(), t = this.ctx.currentTime;
+    const f = this.filter('bandpass', 1200, 2);
+    f.frequency.exponentialRampToValueAtTime(5200, t + 0.12);
+    s.connect(f).connect(this.env(0.35, 0.005, 0.18)).connect(this.out);
+    s.start(t, Math.random());
+    s.stop(t + 0.3);
+    this.tone('sine', 140, 40, 0.3, 0.8, 0.02);
+  }
 }

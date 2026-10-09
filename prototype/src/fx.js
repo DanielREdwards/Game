@@ -127,6 +127,15 @@ export class FX {
       this.puffs.push({ s, t: 9, life: 1.6 });
     }
 
+    // brilho de estrela do confronto
+    this.glintS = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: starTex(), color: new THREE.Color(3.2, 3.4, 4.2), transparent: true, depthWrite: false, depthTest: false, blending: THREE.AdditiveBlending,
+    }));
+    this.glintS.visible = false;
+    this.glintS.renderOrder = 21;
+    scene.add(this.glintS);
+    this.glintT = 9;
+
     this.flashes = [];
     for (let i = 0; i < 10; i++) {
       const s = new THREE.Sprite(new THREE.SpriteMaterial({
@@ -215,12 +224,46 @@ export class FX {
     f.s.visible = true;
   }
 
+  // Partículas de cura subindo devagar (cor de jade).
+  rise(p) {
+    this.sparks.emit(p, 1, { color: [0.5, 2.4, 1.7], speed: 0.25, up: 1.1, gravity: -0.6, life: 0.9, size: 0.045, spread: 0.6 });
+  }
+
+  // Arma quebrando: cacos de vidro, lascas de madeira ou faíscas de metal.
+  shatter(p, kind) {
+    if (kind === 'glass') {
+      this.sparks.emit(p, 46, { color: [1.6, 2.4, 2.0], speed: 5.5, up: 1.6, gravity: 10, life: 0.6, size: 0.035, spread: 1.4 });
+      this.flash(p, [2.0, 2.6, 2.4], 1.0, 0.12);
+    } else if (kind === 'wood') {
+      this.sparks.emit(p, 30, { color: [1.3, 0.75, 0.35], speed: 4, up: 1.8, gravity: 11, life: 0.7, size: 0.045, spread: 1.2 });
+    } else {
+      this.sparks.emit(p, 24, { color: [4, 2.4, 0.8], speed: 6, up: 1.2, gravity: 9, life: 0.4, size: 0.03 });
+      this.flash(p, [3.5, 2.4, 1.2], 0.7, 0.08);
+    }
+  }
+
+  // Brilho de estrela sobre o adversário no confronto: sinal para soltar o botão.
+  glint(p) {
+    this.glintS.position.copy(p);
+    this.glintS.visible = true;
+    this.glintT = 0;
+  }
+
   setScale(px) {
     this.sparks.uniforms.uScale.value = px;
   }
 
   update(dt) {
     this.sparks.update(dt);
+    if (this.glintT < 0.55) {
+      this.glintT += dt;
+      const k = this.glintT / 0.55;
+      const sc = (k < 0.18 ? k / 0.18 : 1 - (k - 0.18) * 0.6) * 0.5;
+      this.glintS.scale.set(sc, sc, 1);
+      this.glintS.material.rotation = k * 0.8;
+      this.glintS.material.opacity = 1 - Math.max(0, k - 0.7) / 0.3;
+      if (k >= 1) this.glintS.visible = false;
+    }
     if (this.lightT > 0 && (this.lightT -= dt) <= 0) this.light.intensity = 0;
     for (const tr of this.tracers) {
       if (tr.t >= 0.08) { tr.m.visible = false; continue; }
@@ -255,3 +298,30 @@ export class FX {
 }
 
 const tmpV = new THREE.Vector3();
+
+function starTex() {
+  const S = 256, c = T.makeCanvas(S, S), g = c.getContext('2d');
+  const h = S / 2;
+  const gr = g.createRadialGradient(h, h, 0, h, h, h * 0.5);
+  gr.addColorStop(0, 'rgba(255,255,255,1)');
+  gr.addColorStop(0.2, 'rgba(220,235,255,0.55)');
+  gr.addColorStop(1, 'rgba(160,200,255,0)');
+  g.fillStyle = gr;
+  g.fillRect(0, 0, S, S);
+  const ray = (a, len, w) => {
+    g.save();
+    g.translate(h, h);
+    g.rotate(a);
+    const lg = g.createLinearGradient(0, 0, len, 0);
+    lg.addColorStop(0, 'rgba(255,255,255,1)');
+    lg.addColorStop(1, 'rgba(200,225,255,0)');
+    g.fillStyle = lg;
+    g.beginPath();
+    g.moveTo(0, -w); g.lineTo(len, 0); g.lineTo(0, w); g.closePath();
+    g.fill();
+    g.restore();
+  };
+  for (let k = 0; k < 4; k++) ray((k * Math.PI) / 2, h * 0.98, 5);
+  for (let k = 0; k < 4; k++) ray((k * Math.PI) / 2 + Math.PI / 4, h * 0.45, 3);
+  return T.toTex(c);
+}

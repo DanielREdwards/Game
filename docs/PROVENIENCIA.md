@@ -6,33 +6,48 @@ Inventário de tudo que compõe o protótipo, com origem e licença. Deve ser at
 
 | Elemento | Onde está | Como foi criado |
 |---|---|---|
-| Código do jogo (combate, IA, câmera, renderização) | `prototype/src/*.js` | Escrito para este projeto |
+| Código do jogo (combate, IA, ondas, confronto, câmera, renderização) | `prototype/src/*.js` | Escrito para este projeto |
 | Arte conceitual dos personagens | `docs/arte-conceitual/` | Fornecida pelo titular do projeto |
-| Personagens (protagonista e família Vittore) | `prototype/src/rig.js`, `characters.js`, `player.js`, `enemy.js` | Interpretação procedural da arte conceitual: tronco por revolução, cápsulas e esferas, acessórios geométricos |
-| Tatuagens, ternos risca de giz, tecidos e relevo muscular | `prototype/src/bodytex.js` | Desenhados em `<canvas>` no momento da execução; relevo convertido em mapa de normais por código |
-| Armas (submetralhadora de tambor e pistola) | `prototype/src/weapons.js` | Geometria genérica, sem marcas nem logotipos |
-| Animações (golpes, quedas, corrida) | `prototype/src/poses.js` | Poses autorais, interpoladas por código |
-| Cenário (prédios, lojas, táxi, adereços) | `prototype/src/world.js` | Geometria procedural |
-| Texturas (fachadas, asfalto, letreiros, roupas) | `prototype/src/textures.js` | Desenhadas em `<canvas>` no momento da execução |
-| Letreiros | `prototype/src/world.js` | Palavras comuns do cotidiano de Hong Kong: 茶餐廳, 藥房, 麻雀館 etc. Nenhuma marca, logotipo ou estabelecimento real |
-| Sinal de perigo 危 com anel que se contrai | `prototype/src/textures.js`, `enemy.js` | Design próprio |
+| Corpos dos personagens | `prototype/src/body/sdf.js`, `mesher.js`, `humanoid.js`, `factory.js`, `worker.js` | Campo de distância com sólidos próprios (seções do tronco medidas de um adulto, tubos com perfil de músculos ou de tecido, peças de roupa), extração por *surface nets* e pesos de esqueleto calculados por código |
+| Cabeças, olhos, cabelo e chapéus | `prototype/src/body/humanoid.js`, `paint.js`, `rig.js` | Esculpidos por sólidos de distância e geometria de revolução; olhos em decalque pintado em canvas |
+| Tatuagens, ternos, camisas, rostos e relevo muscular | `prototype/src/body/paint.js`, `bodytex.js` | Desenhados em `<canvas>` no momento da execução; relevo convertido em mapa de normais por código |
+| Elenco (Wei Leo, família Vittore e soldados) | `prototype/src/characters.js` | Interpretação procedural da arte conceitual e da especificação dos soldados |
+| Armas de fogo e armas do chão | `prototype/src/weapons.js`, `pickups.js` | Geometria genérica, sem marcas nem logotipos |
+| Animações (golpes, golpes com arma, quedas, corrida, confronto) | `prototype/src/poses.js` | Poses autorais, interpoladas por código |
+| Mapa (beco, Rua Fa Yuen, mercado, templo) | `prototype/src/map.js`, `world.js`, `world/*.js` | Geometria procedural; arquitetura genérica; o templo é um desenho próprio de templo de Tin Hau, sem copiar edifício real |
+| Leões de pedra | `prototype/src/world/temple.js` | Esculpidos por sólidos de distância |
+| Texturas (fachadas, asfalto, calçadas, granito, telhas, toldos, letreiros) | `prototype/src/textures.js`, `world/*.js` | Desenhadas em `<canvas>` no momento da execução |
+| Letreiros e marcações | `prototype/src/world/*.js` | Palavras comuns do cotidiano de Hong Kong (茶餐廳, 藥房, 涼茶, 金行, 夜市 etc.), nomes de lugares públicos (女人街, 天后廟) e a marcação de trânsito "望右 LOOK RIGHT". Nenhuma marca, logotipo ou estabelecimento real |
+| Sinais 危, 閃 e brilho de estrela | `prototype/src/textures.js`, `fx.js` | Design próprio |
+| Ondas, confronto, determinação e vento-guia | `prototype/src/waves.js`, `standoff.js`, `player.js`, `wind.js` | Regras próprias, registradas na especificação antes do código |
 | Efeitos sonoros e trilha | `prototype/src/audio.js` | Sintetizados em tempo real (Web Audio API); nenhum arquivo de áudio |
-| Interface (tela inicial, HUD, tela final) | `prototype/index.html` | Escrita para este projeto |
+| Interface (tela inicial, HUD, cartões de onda, pausa, tela final) | `prototype/index.html`, `prototype/src/hud.js` | Escrita para este projeto |
 
 ## Componentes de terceiros
 
 | Componente | Versão | Licença | Forma de uso |
 |---|---|---|---|
-| three.js | 0.160.0 | MIT (© 2010–2023 three.js authors) | Carregado via CDN jsDelivr; módulos `EffectComposer`, `UnrealBloomPass`, `OutputPass`, `ShaderPass`, `RenderPass` e `Reflector` |
+| three.js | 0.160.0 | MIT (© 2010–2023 three.js authors) | Carregado via CDN jsDelivr; módulos `EffectComposer`, `UnrealBloomPass`, `OutputPass`, `ShaderPass`, `RenderPass`, `Reflector` e `BufferGeometryUtils` |
 | Big Shoulders Display | — | SIL Open Font License 1.1 | Google Fonts |
 | IBM Plex Mono | — | SIL Open Font License 1.1 | Google Fonts |
 | Noto Sans TC | — | SIL Open Font License 1.1 | Google Fonts |
-| Noto Serif TC | — | SIL Open Font License 1.1 | Google Fonts (ideogramas das tatuagens) |
+| Noto Serif TC | — | SIL Open Font License 1.1 | Google Fonts |
+| LXGW WenKai TC | — | SIL Open Font License 1.1 | Google Fonts (caligrafia dos cartões de onda, tatuagens e avisos) |
 
-A licença MIT permite uso, cópia, modificação e distribuição, desde que o aviso de copyright e a licença acompanhem cópias substanciais do software. Se a biblioteca passar a ser empacotada junto com o jogo, o texto da licença MIT deve ser incluído na distribuição.
+A licença MIT permite uso, cópia, modificação e distribuição, desde que o aviso de copyright e a licença acompanhem cópias substanciais do software. Se a biblioteca passar a ser empacotada junto com o jogo, o texto da licença MIT deve ser incluído na distribuição. A SIL Open Font License 1.1 permite usar as fontes em produtos comerciais; só proíbe vendê-las isoladamente e exige que versões modificadas não usem o nome reservado da fonte.
+
+## Inspirações declaradas
+
+| Referência | O que foi aproveitado | O que **não** foi aproveitado |
+|---|---|---|
+| Jogos de ação em mundo urbano com combate de fluxo livre | Ideias e sistemas de jogo (fichas de ataque, contra-ataque, aproximação automática) | Código, arte, sons, textos e interface |
+| Jogos de samurai em mundo aberto | Ideias de jogo (recurso que cura, duelo de reflexo antes da luta, vento que guia, interface mínima, modo em preto e branco) | Nome, sinais, arte, música, textos e interface; nada disso aparece no jogo nem na divulgação |
+
+Fundamentos: Lei nº 9.610/1998, art. 8º, I e II (ideias, sistemas e regras de jogo não são protegidos); Lei nº 9.279/1996, arts. 129 e 195, III (marcas e concorrência desleal). Detalhes na seção 6 da especificação de personagens.
 
 ## Nomes
 
-- **"Beco de Mong Kok"** é codinome de trabalho. Mong Kok (旺角) é um bairro real de Kowloon, usado como ambientação genérica. O título comercial definitivo depende de busca de anterioridade no INPI e deve ter distintividade suficiente: a Lei nº 9.279/1996, art. 124, VI, veda o registro de sinal "simplesmente descritivo".
-- **"Kai" (啟)** é nome provisório do protagonista, a ser definido pelo titular.
+- **"Noite em Mong Kok"** é codinome de trabalho (o anterior era "Beco de Mong Kok"). Mong Kok (旺角) é um bairro real de Kowloon, usado como ambientação genérica. O título comercial definitivo depende de busca de anterioridade no INPI e deve ter distintividade suficiente: a Lei nº 9.279/1996, art. 124, VI, veda o registro de sinal "simplesmente descritivo".
+- **Wei Leo** é o nome do protagonista definido pelo titular (substitui o provisório "Kai"). Ver a seção 7 da especificação de personagens.
 - **Don Vittore, Luca Moretti e Salvatore Ricci** são nomes definidos pelo titular. Nomes isolados não são protegidos por direito autoral (Lei nº 9.610/1998, art. 8º, VI).
+- **Fa Yuen Street, Tung Choi Street (女人街) e templo de Tin Hau** são lugares e designações públicas, usados como ambientação genérica (Lei nº 9.610/1998, arts. 8º, VI, e 48).

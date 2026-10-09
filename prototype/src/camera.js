@@ -1,9 +1,16 @@
 // Câmera em terceira pessoa que enquadra o protagonista e os inimigos próximos.
 import * as THREE from 'three';
-import { clamp, damp, lerp } from './util.js';
+import { damp, lerp } from './util.js';
 import { REDUCED_MOTION } from './config.js';
+import { cameraClamp } from './map.js';
 
 const tmp = new THREE.Vector3();
+const smoothK = (t) => t * t * (3 - 2 * t);
+function lerpAngle(a, b, t) {
+  let d = ((b - a + Math.PI) % (Math.PI * 2)) - Math.PI;
+  if (d < -Math.PI) d += Math.PI * 2;
+  return a + d * t;
+}
 
 export class CameraRig {
   constructor(camera) {
@@ -34,6 +41,15 @@ export class CameraRig {
     this.cineTarget = on ? 1 : 0;
   }
 
+  // Confronto: a e b são as posições do protagonista e do adversário (ou null para sair).
+  frameDuel(a, b) {
+    this.duel = !!(a && b);
+    if (this.duel) {
+      this.duelA = a;
+      this.duelB = b;
+    }
+  }
+
   update(dt, game) {
     this.t += dt;
     const c = this.cam;
@@ -44,7 +60,7 @@ export class CameraRig {
       this.focus.set(0, 2.2, -1.5);
       pos = tmp.set(Math.sin(a) * 6.5, 2.0 + Math.sin(this.t * 0.2) * 0.3, 6.4 + Math.cos(a) * 1.5);
     } else {
-      this.yaw += game.input.cam * dt * 1.9;
+      this.yaw += game.input.cam * dt * 1.9 + game.input.takeLook() * 0.0034;
       const p = game.player.pos;
       let cx = 0, cz = 0, n = 0;
       for (const e of game.enemies) {
@@ -62,16 +78,32 @@ export class CameraRig {
       // Em telas em retrato, abre o campo de visão e afasta a câmera para enquadrar a luta.
       const aspect = c.aspect;
       const narrow = aspect < 1.3 ? Math.pow(1.3 / aspect, 0.12) : 1;
-      const dist = lerp(this.dist * narrow, 4.4 * narrow, this.cine);
-      const pitch = lerp(this.pitch, 0.2, this.cine);
-      const yaw = this.yaw + this.cine * 0.55;
+      let dist = lerp(this.dist * narrow, 4.4 * narrow, this.cine);
+      let pitch = lerp(this.pitch, 0.2, this.cine);
+      let yaw = this.yaw + this.cine * 0.55;
+      // confronto: enquadra os dois duelistas de lado, câmera baixa
+      this.duelK = damp(this.duelK || 0, this.duel ? 1 : 0, 3, dt);
+      if (this.duelK > 0.001 && this.duelA) {
+        const a = this.duelA, b = this.duelB;
+        const mx = (a.x + b.x) / 2, mz = (a.z + b.z) / 2;
+        const lineYaw = Math.atan2(b.x - a.x, b.z - a.z);
+        let side = lineYaw + Math.PI / 2;
+        if (Math.cos(side - this.yaw) < 0) side += Math.PI;
+        const k = smoothK(this.duelK);
+        this.focus.x = lerp(this.focus.x, mx, k);
+        this.focus.z = lerp(this.focus.z, mz, k);
+        this.focus.y = lerp(this.focus.y, 1.25, k);
+        yaw = lerpAngle(yaw, side - 0.18, k);
+        if (this.duel) this.yaw = lerpAngle(this.yaw, side - 0.18, 1 - Math.exp(-3 * dt));
+        dist = lerp(dist, Math.max(4.6, Math.hypot(b.x - a.x, b.z - a.z) * 1.15), k);
+        pitch = lerp(pitch, 0.1, k);
+      }
       pos = tmp.set(
         this.focus.x + Math.sin(yaw) * Math.cos(pitch) * dist,
         this.focus.y + Math.sin(pitch) * dist,
         this.focus.z + Math.cos(yaw) * Math.cos(pitch) * dist,
       );
-      pos.x = clamp(pos.x, -8.4, 8.4);
-      pos.z = clamp(pos.z, -7.6, 22);
+      cameraClamp(this.focus, pos);
     }
     c.position.copy(pos);
     c.lookAt(this.focus);

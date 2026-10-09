@@ -2,7 +2,7 @@
 import * as THREE from 'three';
 import { Rig } from './rig.js';
 import { STANCE, FALL, LYING, SIT, lerpPose } from './poses.js';
-import { ARENA } from './config.js';
+import { resolve } from './map.js';
 import { clamp, dampAngle, yawTo, smooth } from './util.js';
 
 const tmp = new THREE.Vector3();
@@ -40,8 +40,7 @@ export class Fighter {
   }
 
   clampArena() {
-    this.pos.x = clamp(this.pos.x, ARENA.minX, ARENA.maxX);
-    this.pos.z = clamp(this.pos.z, ARENA.minZ, ARENA.maxZ);
+    resolve(this.pos, this.radius * 0.85);
   }
 
   // Vira-se para o agressor e cai de costas, deslizando no asfalto molhado.

@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Beco de Mong Kok</title>
+<title>Noite em Mong Kok</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=IBM+Plex+Mono:wght@500&family=Noto+Sans+TC:wght@500;900&family=Noto+Serif+TC:wght@900&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=IBM+Plex+Mono:wght@500&family=Noto+Sans+TC:wght@500;900&family=Noto+Serif+TC:wght@900&family=LXGW+WenKai+TC:wght@700&display=swap">
 <style>
   /* Conceito: cartaz de neon de Kowloon. Tipografia condensada de placa, ideogramas como ornamento funcional. */
   :root {
@@ -20,6 +20,8 @@
     --display: "Big Shoulders Display", "Arial Narrow", "Roboto Condensed", Impact, sans-serif;
     --cjk: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", "Hiragino Sans", sans-serif;
     --mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+    --brush: "LXGW WenKai TC", "Noto Serif TC", "Songti TC", serif;
+    --gold: #f2c14e;
     color-scheme: dark;
   }
   [hidden] { display: none !important; }
@@ -39,70 +41,123 @@
   button { font: inherit; color: inherit; }
   :focus-visible { outline: 2px solid var(--amber); outline-offset: 3px; }
 
-  /* ---------- HUD ---------- */
+  /* ---------- HUD (mínima; some fora de combate) ---------- */
   #hud {
     position: absolute;
     inset: 0;
     pointer-events: none;
     padding: calc(env(safe-area-inset-top, 0px) + 18px) max(18px, env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + 18px) max(18px, env(safe-area-inset-left, 0px));
   }
-  .vital { display: grid; gap: 6px; width: min(340px, 52vw); }
-  .vital .who { display: flex; align-items: baseline; gap: 10px; font-family: var(--display); font-weight: 800; font-size: 22px; letter-spacing: 0.08em; }
-  .vital .who .cjk { font-size: 20px; color: var(--jade); text-shadow: 0 0 12px rgba(57, 227, 196, 0.7); }
-  .bar { position: relative; height: 12px; background: rgba(18, 14, 28, 0.75); border: 1px solid rgba(243, 233, 214, 0.35); transform: skewX(-18deg); overflow: hidden; }
-  .bar i { position: absolute; inset: 0; transform-origin: left; }
-  #hpGhost { background: var(--cinnabar); opacity: 0.75; }
-  #hpFill { background: linear-gradient(90deg, #1fb89c, var(--jade)); box-shadow: 0 0 14px rgba(57, 227, 196, 0.8); transition: transform 0.12s; }
-  #hud.low #hpFill { background: var(--cinnabar); box-shadow: 0 0 16px rgba(255, 74, 61, 0.9); }
-  .foes { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 14px); right: max(18px, env(safe-area-inset-right, 0px)); display: flex; align-items: baseline; gap: 8px; font-family: var(--display); }
-  .foes .cjk { font-size: 22px; color: var(--cinnabar); text-shadow: 0 0 12px rgba(255, 74, 61, 0.8); }
-  .foes b { font-size: 44px; font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; }
-  .foes small { font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim); }
+  .calm { transition: opacity 0.8s; }
+  #hud.quiet .calm { opacity: 0.28; }
+  #hud.on .calm, #hud.on #combo { opacity: 0; }
+  .vital {
+    position: absolute; left: max(22px, env(safe-area-inset-left, 0px)); bottom: calc(env(safe-area-inset-bottom, 0px) + 46px);
+    display: grid; gap: 7px; width: min(330px, 54vw);
+  }
+  .vital .who { display: flex; align-items: center; gap: 10px; }
+  .seal {
+    display: grid; place-items: center; width: 30px; height: 30px; border-radius: 4px; background: #a3121a; color: #f6e7c8;
+    font-family: var(--brush); font-size: 21px; line-height: 1; box-shadow: 0 0 0 1px rgba(246, 231, 200, 0.25), 0 0 18px rgba(163, 18, 26, 0.6);
+  }
+  .vital .name { font-family: var(--display); font-weight: 800; font-size: 19px; letter-spacing: 0.24em; text-shadow: 0 1px 8px rgba(0, 0, 0, 0.8); }
+  .hpbar { position: relative; height: 9px; overflow: hidden; background: rgba(10, 8, 14, 0.6);
+    clip-path: polygon(0 35%, 2% 0, 97% 10%, 100% 45%, 98% 100%, 3% 85%); }
+  .hpbar i { position: absolute; inset: 0; transform-origin: left; }
+  #hpGhost { background: #c8241c; opacity: 0.85; }
+  #hpFill { background: linear-gradient(90deg, #e9dfc7, #fff8e6); box-shadow: 0 0 12px rgba(255, 244, 220, 0.7); transition: transform 0.12s; }
+  #hud.low #hpFill { background: linear-gradient(90deg, #ff6a50, #ffb59a); }
+  .det { display: flex; gap: 8px; align-items: center; }
+  .det i {
+    --f: 0; width: 13px; height: 13px; transform: rotate(45deg); border: 1px solid rgba(243, 233, 214, 0.45);
+    background: linear-gradient(0deg, var(--gold) calc(var(--f) * 100%), rgba(243, 233, 214, 0.08) calc(var(--f) * 100%));
+  }
+  .det i.full { box-shadow: 0 0 10px rgba(242, 193, 78, 0.9); border-color: var(--gold); }
+  .det span { margin-left: 6px; font-size: 11px; letter-spacing: 0.12em; color: var(--dim); }
+  .det.ready span { color: var(--gold); }
+  .weapon { display: flex; align-items: center; gap: 9px; font-size: 12px; letter-spacing: 0.1em; }
+  .weapon b { display: grid; place-items: center; width: 26px; height: 26px; border-radius: 50%; border: 1px solid var(--gold); color: var(--gold); font-family: var(--brush); font-size: 16px; font-weight: 400; }
+  .weapon .uses { display: flex; gap: 3px; }
+  .weapon .uses i { width: 6px; height: 6px; background: var(--gold); opacity: 0.9; }
+  .weapon .uses i.off { opacity: 0.18; }
+  .wavebox { position: absolute; left: max(22px, env(safe-area-inset-left, 0px)); top: calc(env(safe-area-inset-top, 0px) + 18px); display: grid; gap: 2px; }
+  .wavebox .w { font-family: var(--brush); font-size: 26px; color: var(--paper); text-shadow: 0 0 14px rgba(0, 0, 0, 0.8); }
+  .wavebox small { font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--dim); }
+  .wavebox .foes { display: flex; align-items: baseline; gap: 8px; margin-top: 4px; font-family: var(--display); }
+  .wavebox .foes .cjk { font-size: 18px; color: var(--cinnabar); }
+  .wavebox .foes b { font-size: 30px; font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; }
   #combo {
-    position: absolute; right: max(22px, env(safe-area-inset-right, 0px)); top: 34%;
+    position: absolute; right: max(22px, env(safe-area-inset-right, 0px)); top: 36%;
     display: grid; justify-items: end; font-family: var(--display); opacity: 0; transform: translateX(24px); transition: opacity 0.2s, transform 0.2s;
   }
   #combo.show { opacity: 1; transform: none; }
-  #combo b { font-size: clamp(56px, 9vw, 104px); font-weight: 900; line-height: 0.82; color: var(--amber); font-style: italic; text-shadow: 0 0 22px rgba(255, 181, 71, 0.65); font-variant-numeric: tabular-nums; }
+  #combo b { font-size: clamp(48px, 7.5vw, 88px); font-weight: 900; line-height: 0.82; color: var(--paper); font-style: italic; text-shadow: 0 0 22px rgba(0, 0, 0, 0.7); font-variant-numeric: tabular-nums; }
   #combo.pop b { animation: pop 0.22s ease-out; }
-  #combo .lbl { display: flex; gap: 8px; align-items: baseline; font-size: 18px; letter-spacing: 0.14em; }
-  #combo .lbl .cjk { font-size: 18px; color: var(--amber); }
+  #combo .lbl { display: flex; gap: 8px; align-items: baseline; font-size: 15px; letter-spacing: 0.18em; color: var(--dim); }
+  #combo .lbl .cjk { font-family: var(--brush); font-size: 18px; color: var(--paper); }
   @keyframes pop { from { transform: scale(1.35); } to { transform: scale(1); } }
-  #meter { position: absolute; right: max(22px, env(safe-area-inset-right, 0px)); top: calc(34% + 150px); display: flex; align-items: center; gap: 5px; }
-  #meter i { width: 18px; height: 8px; transform: skewX(-18deg); background: rgba(243, 233, 214, 0.18); border: 1px solid rgba(243, 233, 214, 0.3); }
-  #meter i.on { background: var(--amber); border-color: var(--amber); box-shadow: 0 0 10px rgba(255, 181, 71, 0.9); }
-  #meter span { margin-left: 8px; font-size: 11px; letter-spacing: 0.14em; color: var(--dim); }
-  #meter.ready span { color: var(--amber); animation: blink 0.7s steps(2) infinite; }
-  @keyframes blink { 50% { opacity: 0.35; } }
   #callout {
-    position: absolute; left: 50%; top: 22%; transform: translateX(-50%);
-    font-family: var(--display); font-weight: 900; font-size: clamp(30px, 5vw, 56px); letter-spacing: 0.08em; text-transform: uppercase;
+    position: absolute; left: 50%; top: 21%; transform: translateX(-50%); display: grid; justify-items: center; gap: 2px;
+    font-family: var(--display); font-weight: 800; font-size: clamp(20px, 3vw, 30px); letter-spacing: 0.22em; text-transform: uppercase;
     white-space: nowrap; opacity: 0;
   }
-  #callout[data-tone="jade"] { color: var(--jade); text-shadow: 0 0 24px rgba(57, 227, 196, 0.85); }
-  #callout[data-tone="amber"] { color: var(--amber); text-shadow: 0 0 24px rgba(255, 181, 71, 0.85); }
-  #callout.go { animation: callout 1.1s ease-out forwards; }
+  #callout .glyph { font-family: var(--brush); font-weight: 400; font-size: clamp(54px, 8vw, 92px); line-height: 1; letter-spacing: 0; text-transform: none; }
+  #callout[data-tone="jade"] { color: var(--jade); text-shadow: 0 0 24px rgba(57, 227, 196, 0.6); }
+  #callout[data-tone="amber"] { color: var(--amber); text-shadow: 0 0 24px rgba(255, 181, 71, 0.6); }
+  #callout.go { animation: callout 1.25s ease-out forwards; }
   @keyframes callout {
-    0% { opacity: 0; transform: translateX(-50%) scale(1.4); }
-    12% { opacity: 1; transform: translateX(-50%) scale(1); }
-    70% { opacity: 1; }
-    100% { opacity: 0; transform: translateX(-50%) translateY(-12px); }
+    0% { opacity: 0; transform: translateX(-50%) scale(1.25); filter: blur(6px); }
+    14% { opacity: 1; transform: translateX(-50%) scale(1); filter: blur(0); }
+    72% { opacity: 1; }
+    100% { opacity: 0; transform: translateX(-50%) translateY(-10px); }
   }
+  #toast { position: absolute; left: 50%; top: calc(21% + 118px); transform: translateX(-50%); font-size: 13px; letter-spacing: 0.14em; color: var(--paper); opacity: 0; white-space: nowrap; text-shadow: 0 1px 8px #000; }
+  #toast.go { animation: toast 3.2s ease-out forwards; }
+  @keyframes toast { 0% { opacity: 0; } 12% { opacity: 1; } 80% { opacity: 1; } 100% { opacity: 0; } }
+  #prompt {
+    position: absolute; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 13vh); transform: translateX(-50%);
+    display: flex; align-items: center; gap: 10px; padding: 8px 16px; font-size: 14px; letter-spacing: 0.12em; white-space: nowrap;
+    background: rgba(7, 6, 12, 0.55); border-top: 1px solid rgba(243, 233, 214, 0.25); border-bottom: 1px solid rgba(243, 233, 214, 0.25);
+  }
+  #prompt kbd { font: inherit; color: var(--night); background: var(--paper); padding: 0 6px; }
+  #prompt .cjk { font-family: var(--brush); color: var(--jade); font-size: 20px; font-weight: 400; }
+  #prompt.duel { animation: breathe 1.6s ease-in-out infinite; }
+  @keyframes breathe { 50% { opacity: 0.55; } }
   .boss {
     position: absolute; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 20px); transform: translateX(-50%);
     width: min(380px, 34vw); display: grid; gap: 5px; justify-items: center;
   }
   .boss span { font-family: var(--display); font-weight: 800; font-size: 15px; letter-spacing: 0.22em; color: #ff8a7a; }
-  .boss .bar { width: 100%; height: 8px; }
+  .boss .bar { position: relative; width: 100%; height: 7px; background: rgba(18, 14, 28, 0.75); overflow: hidden; clip-path: polygon(0 30%, 2% 0, 98% 10%, 100% 50%, 98% 100%, 2% 90%); }
+  .boss .bar i { position: absolute; inset: 0; transform-origin: left; }
   #bossFill { background: linear-gradient(90deg, #a3121a, #ff4a3d); box-shadow: 0 0 12px rgba(255, 74, 61, 0.7); transition: transform 0.15s; }
   .boss.down { opacity: 0.35; }
   .keys {
-    position: absolute; left: max(18px, env(safe-area-inset-left, 0px)); bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
-    display: flex; flex-wrap: wrap; gap: 6px 16px; max-width: 70vw; font-size: 11px; letter-spacing: 0.06em; color: var(--dim);
+    position: absolute; right: max(18px, env(safe-area-inset-right, 0px)); bottom: calc(env(safe-area-inset-bottom, 0px) + 14px);
+    display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px 14px; max-width: min(640px, 52vw); font-size: 11px; letter-spacing: 0.04em; color: var(--dim);
   }
   .keys kbd { font: inherit; color: var(--paper); border: 1px solid rgba(243, 233, 214, 0.35); padding: 0 5px; margin-right: 4px; }
   body.touch .keys { display: none; }
-
+  .keys.gone { opacity: 0 !important; }
+  /* faixas de cinema, cartão de onda e modo P&B */
+  .bars::before, .bars::after { content: ""; position: absolute; left: 0; right: 0; height: 0; background: #000; transition: height 0.6s ease; z-index: 3; pointer-events: none; }
+  .bars::before { top: 0; }
+  .bars::after { bottom: 0; }
+  .bars.on::before, .bars.on::after { height: 10vh; }
+  #card { position: absolute; inset: 0; display: grid; place-items: center; pointer-events: none; opacity: 0; z-index: 4; }
+  #card.go { animation: card 2.8s ease-in-out forwards; }
+  #card .inner { display: grid; justify-items: center; gap: 10px; }
+  #card .big { display: flex; align-items: center; gap: 22px; }
+  #card .t { font-family: var(--brush); font-size: clamp(64px, 12vw, 140px); line-height: 1; color: #f6ecd6; text-shadow: 0 0 40px rgba(0, 0, 0, 0.85); letter-spacing: 0.05em; }
+  #card .stamp { display: grid; place-items: center; writing-mode: vertical-rl; padding: 10px 6px; background: #a3121a; color: #f6e7c8; font-family: var(--brush); font-size: clamp(22px, 3vw, 34px); border-radius: 6px; transform: rotate(-4deg); box-shadow: 0 0 30px rgba(163, 18, 26, 0.55); }
+  #card .sub { font-family: var(--display); font-weight: 800; font-size: clamp(16px, 2.2vw, 22px); letter-spacing: 0.42em; text-transform: uppercase; color: var(--paper); }
+  #card .rule { width: min(420px, 60vw); height: 2px; background: linear-gradient(90deg, transparent, #f6ecd6, transparent); }
+  @keyframes card {
+    0% { opacity: 0; transform: scale(1.06); filter: blur(8px); }
+    18% { opacity: 1; transform: scale(1); filter: blur(0); }
+    78% { opacity: 1; }
+    100% { opacity: 0; filter: blur(4px); }
+  }
   /* ---------- Telas ---------- */
   .overlay {
     position: absolute; inset: 0; overflow-y: auto; display: grid; align-items: center;
@@ -119,10 +174,12 @@
   h1 { margin: 0; font-family: var(--display); font-weight: 900; font-size: clamp(46px, 7vw, 92px); line-height: 0.88; letter-spacing: 0.01em; text-transform: uppercase; text-wrap: balance; }
   h1 .cjk { display: block; font-size: 0.3em; letter-spacing: 0.3em; color: var(--cinnabar); margin-bottom: 10px; text-shadow: 0 0 18px rgba(255, 74, 61, 0.8); }
   .lead { margin: 0; max-width: 58ch; font-size: 14px; color: var(--dim); }
-  .controls { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px 22px; margin: 0; font-size: 12px; }
+  .controls { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px 22px; margin: 0; font-size: 12px; }
   .controls div { min-width: 0; border-top: 1px solid rgba(243, 233, 214, 0.2); padding-top: 6px; }
-  .controls dt { color: var(--paper); font-family: var(--display); font-weight: 600; font-size: 17px; letter-spacing: 0.06em; text-transform: uppercase; }
+  .controls dt { color: var(--paper); font-family: var(--display); font-weight: 600; font-size: 15px; letter-spacing: 0.06em; text-transform: uppercase; }
   .controls dd { margin: 0; color: var(--dim); }
+  .controls.compact { gap: 6px 18px; }
+  .controls.compact dt { font-size: 13px; }
   .controls kbd { font: inherit; color: var(--paper); border: 1px solid rgba(243, 233, 214, 0.35); padding: 0 5px; }
   .tip { margin: 0; font-size: 13px; color: var(--paper); border-left: 2px solid var(--cinnabar); padding-left: 12px; }
   .tip .cjk { color: var(--cinnabar); }
@@ -172,6 +229,9 @@
   .btns button[data-act="attack"] { border-color: var(--amber); color: var(--amber); }
   .btns button[data-act="counter"] { border-color: var(--jade); color: var(--jade); }
   .btns button.on { background: rgba(243, 233, 214, 0.28); }
+  .btns button.small { height: 52px; border-radius: 26px; font-size: 11px; color: var(--dim); }
+  #pauseTouch { position: absolute; right: max(14px, env(safe-area-inset-right, 0px)); top: calc(env(safe-area-inset-top, 0px) + 12px); width: 40px; height: 40px; pointer-events: auto; font-weight: 800; }
+  body.touch.playing #pauseTouch { display: block; }
 
   @media (max-width: 640px) {
     .overlay { background: rgba(7, 6, 12, 0.86); align-items: start; }
@@ -179,12 +239,14 @@
     .controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .backdrop { display: none; }
     #combo { top: 22%; }
-    #meter { top: calc(env(safe-area-inset-top, 0px) + 84px); left: max(18px, env(safe-area-inset-left, 0px)); right: auto; }
-    .boss { top: calc(env(safe-area-inset-top, 0px) + 108px); width: calc(100% - 36px); justify-items: start; left: 18px; transform: none; }
-    .vital { width: 56vw; }
+    .boss { top: calc(env(safe-area-inset-top, 0px) + 96px); width: calc(100% - 36px); justify-items: start; left: 18px; transform: none; }
+    .vital { width: 50vw; bottom: calc(env(safe-area-inset-bottom, 0px) + 170px); }
+    body:not(.touch) .vital { bottom: calc(env(safe-area-inset-bottom, 0px) + 60px); }
+    #prompt { bottom: calc(env(safe-area-inset-bottom, 0px) + 250px); font-size: 12px; }
   }
   @media (prefers-reduced-motion: reduce) {
-    #combo.pop b, #callout.go, #meter.ready span { animation: none; }
+    #combo.pop b, #callout.go, #card.go, #toast.go, #prompt.duel { animation: none; }
+    #card.go { opacity: 1; }
     #callout.go { opacity: 1; }
   }
 </style>
@@ -199,74 +261,117 @@
 </head>
 <body>
 <div id="app">
-  <canvas id="scene" aria-label="Cena do jogo: beco de Mong Kok à noite, sob chuva"></canvas>
+  <canvas id="scene" aria-label="Cena do jogo: quarteirão de Mong Kok à noite, sob chuva"></canvas>
 
-  <div id="hud" hidden>
-    <div class="vital">
-      <div class="who"><span class="cjk">啟</span><span>KAI</span></div>
-      <div class="bar" role="img" aria-label="Vida"><i id="hpGhost"></i><i id="hpFill"></i></div>
+  <div id="hud" class="bars" hidden>
+    <div class="wavebox calm" aria-live="polite">
+      <span class="w" id="waveCjk">第一波</span>
+      <small id="waveName">O beco</small>
+      <div class="foes"><span class="cjk">敵</span><b id="foeCount">0</b><small>restantes</small></div>
     </div>
-    <div class="foes"><span class="cjk">敵</span><b id="foeCount">3</b><small>restantes</small></div>
-    <div class="boss" id="boss"><span>DON VITTORE</span><div class="bar"><i id="bossFill"></i></div></div>
+    <div class="boss" id="boss" hidden><span>DON VITTORE</span><div class="bar"><i id="bossFill"></i></div></div>
+    <div class="vital calm">
+      <div class="who"><span class="seal" aria-hidden="true">偉</span><span class="name">WEI LEO</span></div>
+      <div class="hpbar" role="img" aria-label="Vida"><i id="hpGhost"></i><i id="hpFill"></i></div>
+      <div class="det" id="det" role="img" aria-label="Determinação"><i></i><i></i><i></i><i></i><i></i><span>Determinação</span></div>
+      <div class="weapon" id="weapon" hidden><b id="wCjk">瓶</b><span id="wName">Garrafa</span><span class="uses" id="wUses"></span></div>
+    </div>
     <div id="combo" aria-live="polite"><b id="comboNum">0</b><div class="lbl"><span>COMBO</span><span class="cjk">連擊</span></div></div>
-    <div id="meter"><i></i><i></i><i></i><i></i><i></i><span>F · Finalizar</span></div>
-    <div id="callout" data-tone="jade"></div>
-    <div class="keys">
+    <div id="callout" data-tone="jade"><span class="glyph" id="calloutCjk"></span><span id="calloutText"></span></div>
+    <div id="toast"></div>
+    <div id="prompt" hidden></div>
+    <div class="keys calm">
       <span><kbd>WASD</kbd>mover</span>
       <span><kbd>J</kbd>/<kbd>clique</kbd>atacar</span>
-      <span><kbd>K</kbd>/<kbd>botão dir.</kbd>contra-atacar</span>
+      <span><kbd>K</kbd>contra-atacar · segurar: confronto</span>
       <span><kbd>Espaço</kbd>esquivar</span>
       <span><kbd>F</kbd>finalizar</span>
-      <span><kbd>Q</kbd><kbd>E</kbd>câmera</span>
-      <span><kbd>M</kbd>som</span>
+      <span><kbd>H</kbd>curar</span>
+      <span><kbd>E</kbd>pegar arma</span>
+      <span><kbd>←</kbd><kbd>→</kbd>/mouse câmera</span>
+      <span><kbd>C</kbd>cinema P&amp;B</span>
+      <span><kbd>Esc</kbd>pausa</span>
     </div>
   </div>
+  <div id="card" aria-live="polite"><div class="inner"><div class="big"><span class="t" id="cardTitle">第一波</span><span class="stamp" id="cardZone">後巷</span></div><div class="rule"></div><span class="sub" id="cardSub">O beco</span></div></div>
 
   <section id="title" class="overlay" aria-labelledby="gameTitle">
     <div class="backdrop" aria-hidden="true">旺角</div>
     <div class="sheet">
-      <p class="kicker">Protótipo jogável 02 · Kowloon, 02:40</p>
-      <h1 id="gameTitle"><span class="cjk">旺角後巷</span>Beco de Mong Kok</h1>
-      <p class="lead">Chuva sobre o asfalto, neon nas poças e a família Vittore fechando a saída do beco: Don Vittore, Luca Moretti e Salvatore Ricci. Encadeie golpes, leia o perigo e responda no tempo certo.</p>
+      <p class="kicker">Protótipo jogável 03 · Kowloon, 02:40</p>
+      <h1 id="gameTitle"><span class="cjk">旺角之夜</span>Noite em Mong Kok</h1>
+      <p class="lead">Wei Leo atravessa um quarteirão de Mong Kok sob chuva: o beco, a Rua Fa Yuen, o mercado noturno e o pátio do templo de Tin Hau. Quatro ondas da família Vittore até Don Vittore. Leia o perigo, encare o confronto e siga o vento.</p>
+      <div class="actions">
+        <button id="startBtn" class="cta" disabled>Carregando o quarteirão…</button>
+        <button id="soundBtn" class="ghost" aria-pressed="true">Som: ligado</button>
+      </div>
       <dl class="controls">
-        <div><dt>Mover</dt><dd><kbd>WASD</kbd> ou setas · analógico</dd></div>
+        <div><dt>Mover</dt><dd><kbd>WASD</kbd> · analógico</dd></div>
         <div><dt>Atacar</dt><dd><kbd>J</kbd> ou clique · □ / X</dd></div>
         <div><dt>Contra-atacar</dt><dd><kbd>K</kbd> ou botão direito · △ / Y</dd></div>
         <div><dt>Esquivar</dt><dd><kbd>Espaço</kbd> + direção · ✕ / A</dd></div>
-        <div><dt>Finalizar</dt><dd><kbd>F</kbd> com 5 acertos · ○ / B</dd></div>
-        <div><dt>Câmera</dt><dd><kbd>Q</kbd> <kbd>E</kbd> · analógico direito</dd></div>
+        <div><dt>Finalizar</dt><dd><kbd>F</kbd> · 3 de determinação · ○ / B</dd></div>
+        <div><dt>Curar</dt><dd><kbd>H</kbd> · 2 de determinação · LB</dd></div>
+        <div><dt>Pegar arma</dt><dd><kbd>E</kbd> · RB</dd></div>
+        <div><dt>Câmera</dt><dd><kbd>←</kbd> <kbd>→</kbd> ou mouse · analógico direito</dd></div>
+        <div><dt>Cinema P&amp;B</dt><dd><kbd>C</kbd> · Select</dd></div>
       </dl>
-      <p class="lead touch-help">Joystick à esquerda para mover. À direita: <b>ATACAR</b>, <b>CONTRA</b> (contra-atacar), <b>ESQUIVA</b> e <b>FINAL</b> (finalização após 5 acertos).</p>
+      <p class="lead touch-help">Joystick à esquerda para mover; arraste à direita para girar a câmera. Botões: <b>ATACAR</b>, <b>CONTRA</b> (segure no confronto), <b>ESQUIVA</b>, <b>FINAL</b>, <b>CURAR</b> e <b>PEGAR</b>.</p>
       <div class="tips">
-        <p class="tip"><span class="cjk">危</span> sobre um inimigo: golpe a caminho. Contra-ataque.</p>
+        <p class="tip"><span class="cjk">危</span> sobre um inimigo: golpe a caminho. Contra-ataque; no fim da preparação, sai um contra-ataque perfeito.</p>
         <p class="tip jade"><span class="cjk">閃</span> e linha de mira em você: tiro a caminho. Esquive para sair da linha.</p>
-      </div>
-      <div class="actions">
-        <button id="startBtn" class="cta" disabled>Carregando o beco…</button>
-        <button id="soundBtn" class="ghost" aria-pressed="true">Som: ligado</button>
+        <p class="tip"><span class="cjk">斬</span> No confronto, segure CONTRA e solte só quando o brilho de estrela acender.</p>
       </div>
       <p class="fine">Código, personagens, cenário, texturas e sons originais, gerados por procedimento. Desenvolvido em sala limpa, sem reaproveitar código ou arquivos de outros jogos.</p>
+    </div>
+  </section>
+
+  <section id="pause" class="overlay" hidden aria-labelledby="pauseTitle">
+    <div class="sheet">
+      <p class="kicker">Pausa</p>
+      <h1 id="pauseTitle"><span class="cjk">暫停</span>Respire</h1>
+      <dl class="controls compact">
+        <div><dt>Mover</dt><dd><kbd>WASD</kbd> · analógico</dd></div>
+        <div><dt>Atacar</dt><dd><kbd>J</kbd> ou clique · □ / X</dd></div>
+        <div><dt>Contra-atacar</dt><dd><kbd>K</kbd> ou botão direito · △ / Y</dd></div>
+        <div><dt>Esquivar</dt><dd><kbd>Espaço</kbd> + direção · ✕ / A</dd></div>
+        <div><dt>Finalizar</dt><dd><kbd>F</kbd> · 3 de determinação · ○ / B</dd></div>
+        <div><dt>Curar</dt><dd><kbd>H</kbd> · 2 de determinação · LB</dd></div>
+        <div><dt>Pegar arma</dt><dd><kbd>E</kbd> · RB</dd></div>
+        <div><dt>Câmera</dt><dd><kbd>←</kbd> <kbd>→</kbd> ou mouse · analógico direito</dd></div>
+        <div><dt>Cinema P&amp;B</dt><dd><kbd>C</kbd> · Select</dd></div>
+      </dl>
+      <div class="actions">
+        <button id="resumeBtn" class="cta">Continuar</button>
+        <button id="retryBtn2" class="ghost">Tentar a onda de novo</button>
+        <button id="restartBtn" class="ghost">Recomeçar do início</button>
+        <button id="cinemaBtn" class="ghost" aria-pressed="false">Cinema P&amp;B: desligado</button>
+        <button id="soundBtn2" class="ghost" aria-pressed="true">Som: ligado</button>
+      </div>
     </div>
   </section>
 
   <section id="end" class="overlay" hidden aria-live="polite">
     <div class="sheet">
       <p class="kicker" id="endKicker">Vitória</p>
-      <h1 id="endTitle">Beco limpo</h1>
+      <h1 id="endTitle">Mong Kok em paz</h1>
       <dl class="stats" id="endStats"></dl>
-      <div class="actions"><button id="againBtn" class="cta">Jogar de novo</button></div>
+      <div class="actions"><button id="againBtn" class="cta">Jogar de novo</button><button id="retryBtn" class="ghost" hidden>Recomeçar do início</button></div>
     </div>
   </section>
 
   <div id="touch" hidden>
     <div id="stick" aria-label="Direcional"><div id="knob"></div></div>
     <div class="btns">
+      <button data-act="heal" class="small" aria-label="Curar">CURAR</button>
+      <button data-act="pickup" class="small" aria-label="Pegar arma">PEGAR</button>
       <button data-act="counter" aria-label="Contra-atacar">CONTRA</button>
       <button data-act="finisher" aria-label="Finalizar">FINAL</button>
       <button data-act="dodge" aria-label="Esquivar">ESQUIVA</button>
       <button data-act="attack" aria-label="Atacar">ATACAR</button>
     </div>
   </div>
+  <button id="pauseTouch" class="ghost" aria-label="Pausa" hidden>II</button>
 </div>
 <script type="module" src="src/main.js"></script>
 </body>

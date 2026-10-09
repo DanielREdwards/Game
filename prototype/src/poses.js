@@ -158,6 +158,67 @@ export const SALUTE = pose({
   lHip: [0, 0, 0.05], lKn: [0.05, 0, 0], rHip: [0, 0, -0.05], rKn: [0.05, 0, 0],
 });
 
+// ------------------------------------------------------------ armas do chão (mão direita)
+
+const W_DIAG_W = pose({
+  hips: [0, -0.35, 0], spine: [-0.08, -0.2, 0], chest: [-0.05, -0.35, 0], neck: [0, 0.4, 0],
+  lSh: [-0.9, 0, 0.25], lEl: [-1.6, 0, 0], rSh: [-2.75, 0, -0.45], rEl: [-1.35, 0, 0],
+  lHip: [-0.45, 0, 0.14], lKn: [0.45, 0, 0], rHip: [0.35, 0, -0.14], rKn: [0.4, 0, 0],
+});
+const W_DIAG = pose({
+  hips: [0, 0.3, 0], spine: [0.32, 0.25, 0], chest: [0.12, 0.45, 0], neck: [-0.25, -0.5, 0],
+  lSh: [-0.5, 0, 0.45], lEl: [-1.3, 0, 0], rSh: [-1.15, 0, 0.32], rEl: [-0.22, 0, 0],
+  lHip: [-0.62, 0, 0.12], lKn: [0.62, 0, 0], rHip: [0.5, 0, -0.14], rKn: [0.15, 0, 0],
+});
+const W_HORIZ_W = pose({
+  hips: [0, -0.45, 0], spine: [0.08, -0.3, 0], chest: [0.02, -0.55, 0], neck: [-0.05, 0.75, 0],
+  lSh: [-1.1, 0, 0.35], lEl: [-1.4, 0, 0], rSh: [-1.35, 0, -1.15], rEl: [-1.2, 0, 0],
+  lHip: [-0.5, 0, 0.14], lKn: [0.5, 0, 0], rHip: [0.32, 0, -0.14], rKn: [0.45, 0, 0],
+});
+const W_HORIZ = pose({
+  hips: [0, 0.35, 0], spine: [0.18, 0.3, 0], chest: [0.05, 0.6, 0], neck: [-0.08, -0.8, 0],
+  lSh: [-0.6, 0, 0.55], lEl: [-1.6, 0, 0], rSh: [-1.45, 0, 0.55], rEl: [-0.15, 0, 0],
+  lHip: [-0.58, 0, 0.12], lKn: [0.58, 0, 0], rHip: [0.48, 0, -0.14], rKn: [0.15, 0, 0],
+});
+const W_BACK_W = pose({
+  hips: [0, 0.25, 0], spine: [0.12, 0.3, 0], chest: [0.04, 0.55, 0], neck: [-0.05, -0.6, 0],
+  lSh: [-0.8, 0, 0.4], lEl: [-1.8, 0, 0], rSh: [-1.3, 0, 0.75], rEl: [-1.75, 0, 0],
+  lHip: [-0.5, 0, 0.14], lKn: [0.5, 0, 0], rHip: [0.3, 0, -0.14], rKn: [0.45, 0, 0],
+});
+const W_BACK = pose({
+  hips: [0, -0.4, 0], spine: [0.16, -0.3, 0], chest: [0.04, -0.5, 0], neck: [-0.06, 0.65, 0],
+  lSh: [-0.7, 0, 0.3], lEl: [-1.9, 0, 0], rSh: [-1.42, 0, -1.0], rEl: [-0.1, 0, 0],
+  lHip: [-0.55, 0, 0.12], lKn: [0.6, 0, 0], rHip: [0.45, 0, -0.14], rKn: [0.2, 0, 0],
+});
+// Concentração para curar: mãos juntas diante do peito, respiração lenta.
+export const FOCUS = pose({
+  hips: [0, 0, 0], spine: [0.06, 0, 0], chest: [0.02, 0, 0], neck: [0.32, 0, 0],
+  lSh: [-0.75, 0, -0.32], lEl: [-1.75, 0, 0], rSh: [-0.75, 0, 0.32], rEl: [-1.75, 0, 0],
+  lHip: [-0.08, 0, 0.12], lKn: [0.22, 0, 0], rHip: [0.04, 0, -0.12], rKn: [0.22, 0, 0], hy: -0.03,
+});
+// Agachar para pegar algo do chão.
+export const STOOP = pose({
+  hips: [0, -0.2, 0], spine: [0.75, 0, 0], chest: [0.3, 0, 0], neck: [-0.4, 0, 0],
+  lSh: [-0.6, 0, 0.25], lEl: [-0.8, 0, 0], rSh: [-1.0, 0, -0.1], rEl: [-0.3, 0, 0],
+  lHip: [-1.1, 0, 0.16], lKn: [1.5, 0, 0], rHip: [-0.5, 0, -0.16], rKn: [1.1, 0, 0], hy: -0.06,
+});
+// Confronto: o protagonista espera de guarda baixa; o adversário prepara o bote.
+export const DUEL = pose({
+  hips: [0, -0.55, 0], spine: [0.06, 0.2, 0], chest: [0.02, 0.25, 0], neck: [-0.05, 0.55, 0],
+  lSh: [-0.45, 0, 0.18], lEl: [-1.2, 0.3, 0], rSh: [-0.2, 0, -0.22], rEl: [-1.0, -0.3, 0],
+  lHip: [-0.42, 0, 0.18], lKn: [0.55, 0, 0], rHip: [0.38, 0, -0.18], rKn: [0.55, 0, 0], hy: -0.04,
+});
+export const E_READY = pose({
+  hips: [0, -0.3, 0], spine: [0.25, 0.12, 0], chest: [0.1, 0.15, 0], neck: [-0.3, 0, 0],
+  lSh: [-0.7, 0, 0.3], lEl: [-1.6, 0, 0], rSh: [-0.2, 0, -0.5], rEl: [-1.7, 0, 0],
+  lHip: [-0.5, 0, 0.16], lKn: [0.75, 0, 0], rHip: [0.35, 0, -0.16], rKn: [0.75, 0, 0], hy: -0.06,
+});
+export const E_FEINT = pose({
+  hips: [0, 0.1, 0], spine: [0.42, 0.2, 0], chest: [0.15, 0.25, 0], neck: [-0.4, -0.2, 0],
+  lSh: [-0.9, 0, 0.3], lEl: [-1.2, 0, 0], rSh: [-0.6, 0, -0.9], rEl: [-1.2, 0, 0],
+  lHip: [-0.62, 0, 0.16], lKn: [0.72, 0, 0], rHip: [0.42, 0, -0.16], rKn: [0.6, 0, 0], hy: -0.05,
+});
+
 // ------------------------------------------------------------ reações (compartilhadas)
 
 export const HIT_HEAD = pose({
@@ -275,4 +336,11 @@ export const MOVES = {
     { impact: 0.48, cancel: 0.72, reach: 0.85, dmg: 2, hitY: 1.3, heavy: true, knock: true }),
   finisher: clip('finisher', 0.95, [[0, S], [0.45, FIN_UP], [0.6, FIN_SLAM, 'in'], [0.82, FIN_SLAM], [1, S]],
     { impact: 0.6, cancel: 0.9, reach: 0.95, dmg: 99, hitY: 1.25, heavy: true, knock: true, air: 0.3 }),
+  // golpes com arma na mão: diagonal, horizontal e revés (dano e alcance vêm da arma)
+  wDiag: clip('wDiag', 0.46, [[0, S], [0.32, W_DIAG_W], [0.5, W_DIAG, 'out'], [0.7, W_DIAG], [1, S]],
+    { impact: 0.5, cancel: 0.64, reach: 1.05, hitY: 1.45, kb: 0.5, heavy: true, weapon: true }),
+  wHoriz: clip('wHoriz', 0.42, [[0, S], [0.3, W_HORIZ_W], [0.48, W_HORIZ, 'out'], [0.68, W_HORIZ], [1, S]],
+    { impact: 0.48, cancel: 0.62, reach: 1.1, hitY: 1.35, kb: 0.55, weapon: true }),
+  wBack: clip('wBack', 0.4, [[0, S], [0.28, W_BACK_W], [0.46, W_BACK, 'out'], [0.66, W_BACK], [1, S]],
+    { impact: 0.46, cancel: 0.6, reach: 1.05, hitY: 1.4, kb: 0.5, weapon: true }),
 };

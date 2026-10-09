@@ -1,6 +1,6 @@
 # Especificação de Personagens
 
-**Status:** aprovada para implementação · protótipo 02, revisada no protótipo 03 (seções 4 a 6)
+**Status:** implementada · protótipo 02, revisada e implementada no protótipo 03 (seções 4 a 7)
 **Fonte:** arte conceitual fornecida pelo titular do projeto, arquivada em `docs/arte-conceitual/`. Os modelos do jogo são interpretações procedurais dessa arte e não usam nenhum arquivo de terceiros.
 
 ---
@@ -60,11 +60,15 @@ Capangas de rua no mesmo universo estético dos chefes (anos 1930):
 
 ## 5. Técnica de modelagem (para eliminar o aspecto de boneco)
 
-1. **Corpo contínuo.** Cada corpo é uma malha única gerada por campo de distância com sólidos de formas anatômicas (caixa torácica, peitorais, deltoides, bíceps, panturrilhas e outros), unidos de forma suave e extraídos por *surface nets*. Não há juntas esféricas aparentes.
-2. **Pele com esqueleto.** A malha é deformada por esqueleto (*skinning*) com pesos suaves calculados pela proximidade de cada osso.
-3. **Cabeça esculpida.** Cabeça em resolução mais fina, com crânio, mandíbula, maçãs do rosto, nariz, arcadas, lábios e orelhas. Olhos são esferas próprias encaixadas nas órbitas.
-4. **Proporções adultas.** Cerca de 7,5 a 8 cabeças de altura.
-5. **Figurinos pintados.** Pele, tatuagens e roupas são pintadas num atlas de textura por personagem. Volumes de roupa (paletó, sobretudo, calça cargo, bolsos) entram no próprio campo de distância.
+1. **Corpo contínuo.** Cada corpo é uma malha única gerada por campo de distância e extraída por *surface nets*. Não há juntas esféricas aparentes.
+2. **Tronco por seções.** O tronco é descrito por seções horizontais (meia-largura, profundidade da frente e das costas) medidas de um homem adulto de 1,80 m: pescoço com cerca de 40 cm de circunferência, ombros de 41 cm entre os acrômios, cintura mais estreita que o peito e glúteos. As curvas entre as seções são suaves e não ultrapassam os valores medidos.
+3. **Membros por perfil.** Braços e pernas são tubos com perfil de raios ao longo do osso: deltoide, bíceps e tríceps, antebraço que afina no punho, coxa e panturrilha. Nas roupas, o perfil é o do tecido: mangas retas, calça larga dos anos 1930, calça cargo folgada.
+4. **Roupas com volume próprio.** Paletó com ombros largos e barra cobrindo o assento; sobretudo aberto da cintura para baixo, com fenda atrás; camisa por dentro da calça; regata do brutamontes.
+5. **Pele com esqueleto.** Pesos de deformação suaves: o tronco passa do quadril para a coluna, o peito e o pescoço conforme a altura; o ombro passa do peito para o braço ao longo do úmero; a raiz da coxa passa do quadril para a perna; a barra do paletó e do sobretudo acompanha as coxas em parte.
+6. **Cabeça adulta esculpida.** Crânio e nuca, maciço facial, mandíbula angulosa com ramo até a orelha, queixo quadrado, maçãs, arcada supraciliar, nariz com asas, lábios e orelhas rentes. Olhos em **decalque amendoado** (esclera, íris, pupila e linha dos cílios) sobre o globo esculpido, com a pálpebra superior cobrindo parte da íris, para evitar o olhar arregalado.
+7. **Pintura.** Pele com variação de tom (testa mais clara, nariz e orelhas rosados), sombra de barba feita, sobrancelhas fio a fio, lábios em tom sóbrio, definição muscular masculina (borda reta do peitoral, abdome em blocos) e tatuagens; roupas pintadas num atlas de 1024 px por personagem.
+8. **Cabelo e chapéus.** Topo desfiado com mechas curtas e franja caindo na testa; laterais raspadas pintadas em degradê. Fedoras e boinas torneados, com copa vincada e aba fina.
+9. **Proporções adultas.** Cerca de 7,8 cabeças de altura.
 
 ## 6. Inspiração declarada em Ghost of Tsushima: ideias, não expressão
 

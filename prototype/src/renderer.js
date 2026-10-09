@@ -15,11 +15,12 @@ const GradeShader = {
     uVignette: { value: 0.6 },
     uGrain: { value: 0.03 },
     uPunch: { value: 0 },
+    uBW: { value: 0 },
     uRes: { value: new THREE.Vector2(1, 1) },
   },
   vertexShader: `varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }`,
   fragmentShader: `
-    uniform sampler2D tDiffuse; uniform float uTime, uAberr, uVignette, uGrain, uPunch; uniform vec2 uRes;
+    uniform sampler2D tDiffuse; uniform float uTime, uAberr, uVignette, uGrain, uPunch, uBW; uniform vec2 uRes;
     varying vec2 vUv;
     float hash(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
     void main() {
@@ -34,9 +35,16 @@ const GradeShader = {
       col = mix(col, col * vec3(0.9, 1.0, 1.1), 0.55 * (1.0 - l));
       col += vec3(0.008, 0.004, 0.016);
       col = mix(col, col * vec3(1.06, 1.0, 0.94), smoothstep(0.5, 1.0, l));
-      col *= 1.0 - uVignette * smoothstep(0.12, 0.62, r2 * 1.6);
+      // modo cinema P&B: luminância com contraste de filme, grão e vinheta mais fortes
+      float y = dot(col, vec3(0.3, 0.59, 0.11));
+      y = smoothstep(0.02, 0.95, y);
+      y = pow(y, 0.92);
+      col = mix(col, vec3(y), uBW);
+      float flick = 1.0 + uBW * 0.025 * sin(uTime * 37.0);
+      col *= flick;
+      col *= 1.0 - (uVignette + uBW * 0.35) * smoothstep(0.12, 0.62, r2 * 1.6);
       col += uPunch * 0.035 * vec3(1.0, 0.95, 0.9);
-      col += (hash(vUv * uRes + fract(uTime * 7.31)) - 0.5) * uGrain;
+      col += (hash(vUv * uRes + fract(uTime * 7.31)) - 0.5) * (uGrain + uBW * 0.05);
       gl_FragColor = vec4(col, 1.0);
     }`,
 };
@@ -112,6 +120,14 @@ export class Renderer {
 
   tick(dt) {
     this.punchV = Math.max(0, this.punchV - dt * 4);
+    const u = this.grade.uniforms.uBW;
+    u.value += ((this.bw ? 1 : 0) - u.value) * (1 - Math.exp(-4 * dt));
+  }
+
+  // Modo cinema em preto e branco (alternado com C).
+  toggleBW() {
+    this.bw = !this.bw;
+    return this.bw;
   }
 
   render(dt) {

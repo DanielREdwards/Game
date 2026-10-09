@@ -1,6 +1,6 @@
 # Especificação Funcional — Combate de Fluxo Livre
 
-**Status:** aprovada para implementação · protótipo 01, ampliada no protótipo 02 (seção 7-A) e no protótipo 03 (seções 11 a 15)
+**Status:** implementada · protótipo 01, ampliada no protótipo 02 (seção 7-A) e no protótipo 03 (seções 11 a 16)
 **Fonte:** convenções públicas do gênero de ação corpo a corpo em terceira pessoa, descritas em linguagem própria. Nenhum valor, arte ou texto foi extraído de jogo de terceiros.
 
 > Esta especificação descreve **ideias e regras de jogo**, matéria não protegida nos termos da Lei nº 9.610/1998, art. 8º, I e II. Todos os elementos de **expressão** (nomes, aparência, sinais visuais, sons e valores numéricos) foram criados para este projeto.
@@ -207,3 +207,14 @@ Todos os golpes de soldados são contra-atacáveis.
 5. **Encadeamento.** Até três adversários, cada um mais rápido que o anterior.
 6. **Erro.** Soltar antes do brilho, inclusive durante uma finta, ou tarde demais custa um golpe de 20 de vida, e a luta começa.
 7. **Chefe.** Don Vittore não participa do confronto.
+
+## 16. Ajustes de equilíbrio (protótipo 03)
+
+Registrados depois dos testes automatizados com um jogador simulado que só atacava (sem contra-atacar nem esquivar) e que vencia sem dificuldade.
+
+1. **Golpe comprometido.** Depois de 30 % da preparação, o golpe inimigo não é interrompido por socos, chutes ou armas: o inimigo sente o dano, mas o golpe sai. Só o contra-ataque o detém. O sinal 危 continua valendo como aviso.
+2. **Brutamontes.** Não recua com golpes leves enquanto ronda, avança ou golpeia. Golpes pesados, armas do chão, contra-ataques e finalizações o abalam normalmente.
+3. **Finalização contra chefes.** Derruba qualquer soldado, mas tira 6 pontos de vida de um chefe, em vez de nocauteá-lo.
+4. **Vida dos chefes.** Don Vittore 12, Salvatore Ricci 8, Luca Moretti 7.
+5. **Esquiva perfeita.** A janela de 0,15 s da seção 12 é medida com tolerância de um quadro (cerca de 0,017 s).
+

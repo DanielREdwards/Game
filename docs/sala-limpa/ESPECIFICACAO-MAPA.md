@@ -1,6 +1,6 @@
 # Especificação do Mapa — Quarteirão de Mong Kok
 
-**Status:** aprovada para implementação · protótipo 03
+**Status:** implementada · protótipo 03
 **Escala:** cerca de 100 m × 45 m, contra 15 m × 13 m do protótipo anterior.
 
 ---

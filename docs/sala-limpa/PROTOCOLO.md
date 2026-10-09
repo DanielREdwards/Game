@@ -1,6 +1,6 @@
 # Protocolo de Desenvolvimento em Sala Limpa
 
-**Projeto:** Beco de Mong Kok (codinome) — protótipo jogável 01
+**Projeto:** Noite em Mong Kok (codinome; antes "Beco de Mong Kok") — protótipos jogáveis 01 a 03
 **Natureza do documento:** norma interna de conduta e de constituição de prova de criação independente
 
 ---
