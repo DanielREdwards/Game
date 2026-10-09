@@ -8,7 +8,7 @@ export class HUD {
       hud: $('hud'), hpFill: $('hpFill'), hpGhost: $('hpGhost'), combo: $('combo'), comboNum: $('comboNum'),
       meter: $('meter'), foes: $('foeCount'), callout: $('callout'), title: $('title'), end: $('end'),
       start: $('startBtn'), again: $('againBtn'), endKicker: $('endKicker'), endTitle: $('endTitle'),
-      stats: $('endStats'), sound: $('soundBtn'),
+      stats: $('endStats'), sound: $('soundBtn'), boss: $('boss'), bossFill: $('bossFill'),
     };
     this.ghost = 1;
     this.hpV = 1;
@@ -59,6 +59,11 @@ export class HUD {
     this.el.meter.classList.toggle('ready', n >= max);
   }
 
+  boss(frac) {
+    this.el.bossFill.style.transform = `scaleX(${frac})`;
+    this.el.boss.classList.toggle('down', frac <= 0);
+  }
+
   foes(n) {
     this.el.foes.textContent = n;
   }
@@ -81,6 +86,7 @@ export class HUD {
       ['Tempo', `${stats.time.toFixed(1)} s`],
       ['Combo máximo', `${stats.maxCombo}×`],
       ['Contra-ataques', stats.counters],
+      ['Rajadas esquivadas', stats.dodged],
       ['Golpes sofridos', stats.hitsTaken],
     ];
     e.stats.innerHTML = rows.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join('');

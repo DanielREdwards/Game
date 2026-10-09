@@ -168,5 +168,20 @@ export class Sfx {
     this.burst(0.8, 0.45, 'lowpass', 600);
   }
 
+  // Disparo: estalo seco, corpo grave e um eco curto entre os prédios.
+  gunshot(auto) {
+    this.burst(0.07, auto ? 0.5 : 0.65, 'highpass', 1000);
+    this.burst(0.16, auto ? 0.32 : 0.42, 'lowpass', 2400);
+    this.tone('square', 240, 70, 0.04, 0.18);
+    this.tone('sine', 130, 40, 0.14, auto ? 0.45 : 0.6);
+    this.burst(0.32, 0.08, 'bandpass', 900, 0.8, 0.11);
+  }
+
+  // Ferrolho/cão sendo armado: aviso sonoro do disparo.
+  cock() {
+    this.burst(0.03, 0.22, 'highpass', 3000);
+    this.burst(0.03, 0.2, 'bandpass', 1800, 2, 0.09);
+  }
+
   ui() { this.tone('sine', 880, 870, 0.06, 0.06); }
 }

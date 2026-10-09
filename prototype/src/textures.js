@@ -423,56 +423,30 @@ export function dangerTex() {
   return toTex(c);
 }
 
-// ---------------------------------------------------------------- roupas e adereços
-
-export function floralTex(rng) {
-  const S = 256, c = makeCanvas(S, S), g = c.getContext('2d');
-  g.fillStyle = '#a51c2c';
-  g.fillRect(0, 0, S, S);
-  for (let i = 0; i < 30; i++) {
-    const x = rng() * S, y = rng() * S, r = 9 + rng() * 9, rot = rng() * 6;
-    wrapped(S, x, y, r * 2, (X, Y) => {
-      g.fillStyle = '#1f6b45';
-      g.beginPath();
-      g.ellipse(X + r, Y + r * 0.6, r * 0.9, r * 0.35, rot, 0, Math.PI * 2);
-      g.fill();
-      g.fillStyle = rng() < 0.5 ? '#f3c04a' : '#f5ecd8';
-      for (let p = 0; p < 5; p++) {
-        const a = rot + (p / 5) * Math.PI * 2;
-        g.beginPath();
-        g.ellipse(X + Math.cos(a) * r * 0.55, Y + Math.sin(a) * r * 0.55, r * 0.5, r * 0.3, a, 0, Math.PI * 2);
-        g.fill();
-      }
-      g.fillStyle = '#7a1a10';
-      g.beginPath();
-      g.arc(X, Y, r * 0.22, 0, Math.PI * 2);
-      g.fill();
-    });
-  }
-  return toTex(c, { repeat: [2, 2] });
-}
-
-export function trackTex() {
+// Sinal de disparo iminente (design próprio: 閃 = "esquivar", dentro de um círculo).
+export function dodgeTex() {
   const S = 128, c = makeCanvas(S, S), g = c.getContext('2d');
-  g.fillStyle = '#1d6a4a';
-  g.fillRect(0, 0, S, S);
-  g.fillStyle = '#e8efe9';
-  g.fillRect(28, 0, 5, S);
-  g.fillRect(37, 0, 5, S);
-  g.fillRect(92, 0, 5, S);
-  g.fillRect(101, 0, 5, S);
+  g.translate(S / 2, S / 2);
+  g.strokeStyle = '#fff';
+  g.lineWidth = 6;
+  g.beginPath();
+  g.arc(0, 0, 44, 0, Math.PI * 2);
+  g.stroke();
+  for (let k = 0; k < 4; k++) {
+    g.save();
+    g.rotate((k * Math.PI) / 2);
+    g.fillRect(-3, -60, 6, 12);
+    g.restore();
+  }
+  g.fillStyle = '#fff';
+  g.font = `900 50px ${CJK_FONT}`;
+  g.textAlign = 'center';
+  g.textBaseline = 'middle';
+  g.fillText('閃', 0, 3);
   return toTex(c);
 }
 
-export function wrapTex() {
-  const S = 64, c = makeCanvas(S, S), g = c.getContext('2d');
-  g.fillStyle = '#ece6da';
-  g.fillRect(0, 0, S, S);
-  g.strokeStyle = 'rgba(120,100,80,0.35)';
-  g.lineWidth = 2;
-  for (let y = -S; y < S * 2; y += 8) { g.beginPath(); g.moveTo(0, y); g.lineTo(S, y + 20); g.stroke(); }
-  return toTex(c);
-}
+// ---------------------------------------------------------------- adereços
 
 export function acTex() {
   const W = 128, H = 96, c = makeCanvas(W, H), g = c.getContext('2d');

@@ -13,29 +13,9 @@ const tmp = new THREE.Vector3();
 const tmp2 = new THREE.Vector3();
 const ZERO = { x: 0, y: 0 };
 
-export const PLAYER_OUTFIT = {
-  rim: 0x5fe8ff,
-  rimStrength: 0.75,
-  mats: {
-    skin: { color: 0xc98d66, roughness: 0.55 },
-    jacket: { color: 0x1d4c52, roughness: 0.38, metalness: 0.08 },
-    shirt: { color: 0xe8e1d2, roughness: 0.8 },
-    pants: { color: 0x18181d, roughness: 0.7 },
-    shoes: { color: 0xf0ede6, roughness: 0.55 },
-    hair: { color: 0x0d0b0b, roughness: 0.45 },
-    wrap: { color: 0xece6da, roughness: 0.85 },
-    accent: { color: 0xe0612b, roughness: 0.5 },
-  },
-  parts: {
-    pelvis: 'pants', abdomen: 'shirt', chest: 'jacket', neck: 'skin', head: 'skin', upperArm: 'jacket',
-    forearm: 'jacket', hand: 'wrap', thigh: 'pants', shin: 'pants', foot: 'shoes', hair: 'hair',
-  },
-  extras: { hair: 'spiky', collar: 'accent' },
-};
-
 export class Player extends Fighter {
   constructor(game) {
-    super(game, PLAYER_OUTFIT, 1);
+    super(game, game.looks.hero, 1);
     this.maxHp = 100;
     this.moveDir = new THREE.Vector3(0, 0, -1);
     this.startPos = new THREE.Vector3();
@@ -321,11 +301,25 @@ export class Player extends Fighter {
 
   startDodge() {
     if (this.mv.lengthSq() > 0.04) this.dodgeDir = this.mv.clone().normalize();
-    else this.dodgeDir = this.forward(new THREE.Vector3()).multiplyScalar(-1);
+    else this.dodgeDir = this.sidestep() || this.forward(new THREE.Vector3()).multiplyScalar(-1);
     this.yaw = Math.atan2(this.dodgeDir.x, this.dodgeDir.z);
-    this.inv = 0.38;
+    this.inv = 0.42;
     this.setState('dodge');
     this.game.sfx.whoosh(false);
+  }
+
+  // Sem direção informada e com alguém mirando: rola para o lado, saindo da linha de tiro,
+  // preferindo o lado com mais espaço até a parede.
+  sidestep() {
+    const shooter = this.game.enemies.find((e) => e.state === 'aim' || e.state === 'fire');
+    if (!shooter) return null;
+    tmp.subVectors(this.pos, shooter.pos).setY(0).normalize();
+    const side = new THREE.Vector3(-tmp.z, 0, tmp.x);
+    const room = (s) => {
+      const x = this.pos.x + side.x * s * 3, z = this.pos.z + side.z * s * 3;
+      return -Math.max(Math.abs(x) - 7.2, 0) - Math.max(Math.abs(z) - 6.2, 0);
+    };
+    return room(1) >= room(-1) ? side : side.multiplyScalar(-1);
   }
 
   updateDodge(dt) {
@@ -348,29 +342,32 @@ export class Player extends Fighter {
     if (this.t > 0.32) this.setState('move');
   }
 
-  takeHit(attacker, dmg) {
+  takeHit(attacker, dmg, { bullet = false } = {}) {
     if (this.inv > 0 || this.state === 'down' || this.state === 'finisher' || this.state === 'counter') return false;
     const g = this.game;
     this.hp = Math.max(0, this.hp - dmg);
-    this.flash = 1;
+    this.flash = bullet ? 0.55 : 1;
     this.breakCombo();
     g.stats.hitsTaken++;
     g.hud.hp(this.hp / this.maxHp);
     g.sfx.hurt();
-    g.cam.shake(0.5);
-    g.hitstop(0.06);
-    g.renderer.punch(1.2);
+    g.cam.shake(bullet ? 0.22 : 0.5);
+    g.hitstop(bullet ? 0.015 : 0.06);
+    g.renderer.punch(bullet ? 0.6 : 1.2);
     this.rig.spin.rotation.x = 0;
     this.pos.y = 0;
-    const hp = this.rig.world('head', tmp);
-    g.fx.impact(hp, { color: [3.0, 0.5, 0.35], count: 14, speed: 4 });
+    const hp = this.rig.world(bullet ? 'chest' : 'head', tmp);
+    if (bullet) hp.y += 0.15;
+    g.fx.impact(hp, { color: [3.0, 0.5, 0.35], count: bullet ? 8 : 14, speed: 4 });
     if (this.hp <= 0) {
       this.beginFall(attacker.pos, 4);
       this.setState('down');
       g.onPlayerDown();
     } else {
       this.face(attacker.pos, 1000, 1);
-      this.forward(this.kb).multiplyScalar(-3.2);
+      this.forward(this.kb).multiplyScalar(bullet ? -1.4 : -3.2);
+      this.hitDur = bullet ? 0.26 : 0.42;
+      this.hitCancel = bullet ? 0.08 : 0.22;
       this.setState('hit');
     }
     return true;
@@ -379,11 +376,11 @@ export class Player extends Fighter {
   updateHit(dt) {
     this.pos.addScaledVector(this.kb, dt);
     this.kb.multiplyScalar(Math.exp(-7 * dt));
-    const f = clamp(this.t / 0.42, 0, 1);
+    const f = clamp(this.t / this.hitDur, 0, 1);
     lerpPose(HIT_HEAD, STANCE, smooth(f), this.pose);
     this.sharp = f < 0.2 ? 40 : 14;
     if (f >= 1) this.setState('move');
-    else if (this.t > 0.22 && this.buffer === 'dodge') this.tryActions();
+    else if (this.t > this.hitCancel && this.buffer === 'dodge') this.tryActions();
   }
 
   celebrate() {

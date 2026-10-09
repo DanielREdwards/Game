@@ -98,8 +98,34 @@ export class FX {
       transparent: true, depthWrite: false,
     });
     this.dangerTex = T.dangerTex();
-    this.clothTex = { floral: T.floralTex(rng), track: T.trackTex() };
+    this.dodgeTex = T.dodgeTex();
     this.ringGeo = new THREE.RingGeometry(0.86, 1, 48);
+    this.unitBox = new THREE.BoxGeometry(1, 1, 1);
+
+    // Luz única reaproveitada para clarões de disparo (a contagem de luzes nunca muda).
+    this.light = new THREE.PointLight(0xffb060, 0, 7, 2);
+    scene.add(this.light);
+    this.lightT = 0;
+
+    this.tracers = [];
+    for (let i = 0; i < 14; i++) {
+      const m = new THREE.Mesh(this.unitBox, new THREE.MeshBasicMaterial({
+        color: new THREE.Color(4, 3, 1.6), transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+      }));
+      m.visible = false;
+      m.renderOrder = 6;
+      scene.add(m);
+      this.tracers.push({ m, t: 1 });
+    }
+    const smoke = T.smokeTex(rng);
+    this.puffs = [];
+    for (let i = 0; i < 24; i++) {
+      const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: smoke, color: 0xcfc8d8, transparent: true, depthWrite: false, opacity: 0 }));
+      s.visible = false;
+      s.renderOrder = 9;
+      scene.add(s);
+      this.puffs.push({ s, t: 9, life: 1.6 });
+    }
 
     this.flashes = [];
     for (let i = 0; i < 10; i++) {
@@ -158,12 +184,58 @@ export class FX {
     this.splash(tmpV);
   }
 
+  muzzle(p) {
+    this.flash(p, [5, 3.2, 1.2], 0.42, 0.05);
+    this.sparks.emit(p, 4, { color: [4, 2.6, 0.9], speed: 3, up: 0.3, gravity: 3, life: 0.12, size: 0.04 });
+    this.light.position.copy(p);
+    this.light.intensity = 30;
+    this.lightT = 0.05;
+  }
+
+  tracer(a, b) {
+    const tr = this.tracers.find((x) => x.t >= 0.08) || this.tracers[0];
+    tr.t = 0;
+    const len = a.distanceTo(b);
+    tr.m.position.lerpVectors(a, b, 0.5);
+    tr.m.lookAt(b);
+    tr.m.scale.set(0.014, 0.014, len);
+    tr.m.visible = true;
+  }
+
+  ricochet(p) {
+    this.sparks.emit(p, 7, { color: [3.2, 2.4, 1.2], speed: 2.5, up: 1.4, gravity: 9, life: 0.3, size: 0.035 });
+  }
+
+  // Fumaça de charuto/cigarro.
+  puff(p) {
+    const f = this.puffs.find((x) => x.t >= x.life) || this.puffs[0];
+    f.t = 0;
+    f.s.position.copy(p);
+    f.s.material.rotation = Math.random() * 6;
+    f.s.visible = true;
+  }
+
   setScale(px) {
     this.sparks.uniforms.uScale.value = px;
   }
 
   update(dt) {
     this.sparks.update(dt);
+    if (this.lightT > 0 && (this.lightT -= dt) <= 0) this.light.intensity = 0;
+    for (const tr of this.tracers) {
+      if (tr.t >= 0.08) { tr.m.visible = false; continue; }
+      tr.t += dt;
+      tr.m.material.opacity = 1 - tr.t / 0.08;
+    }
+    for (const f of this.puffs) {
+      if (f.t >= f.life) { f.s.visible = false; continue; }
+      f.t += dt;
+      const k = f.t / f.life;
+      f.s.position.y += dt * 0.35;
+      f.s.position.x += dt * 0.08;
+      f.s.scale.setScalar(0.08 + k * 0.45);
+      f.s.material.opacity = 0.22 * Math.sin(Math.PI * Math.min(1, k));
+    }
     for (const f of this.flashes) {
       if (f.t >= f.dur) { f.s.visible = false; continue; }
       f.t += dt;

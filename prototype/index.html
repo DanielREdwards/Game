@@ -6,7 +6,7 @@
 <title>Beco de Mong Kok</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=IBM+Plex+Mono:wght@500&family=Noto+Sans+TC:wght@500;900&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Big+Shoulders+Display:wght@600;800;900&family=IBM+Plex+Mono:wght@500&family=Noto+Sans+TC:wght@500;900&family=Noto+Serif+TC:wght@900&display=swap">
 <style>
   /* Conceito: cartaz de neon de Kowloon. Tipografia condensada de placa, ideogramas como ornamento funcional. */
   :root {
@@ -88,6 +88,14 @@
     70% { opacity: 1; }
     100% { opacity: 0; transform: translateX(-50%) translateY(-12px); }
   }
+  .boss {
+    position: absolute; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 20px); transform: translateX(-50%);
+    width: min(380px, 34vw); display: grid; gap: 5px; justify-items: center;
+  }
+  .boss span { font-family: var(--display); font-weight: 800; font-size: 15px; letter-spacing: 0.22em; color: #ff8a7a; }
+  .boss .bar { width: 100%; height: 8px; }
+  #bossFill { background: linear-gradient(90deg, #a3121a, #ff4a3d); box-shadow: 0 0 12px rgba(255, 74, 61, 0.7); transition: transform 0.15s; }
+  .boss.down { opacity: 0.35; }
   .keys {
     position: absolute; left: max(18px, env(safe-area-inset-left, 0px)); bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
     display: flex; flex-wrap: wrap; gap: 6px 16px; max-width: 70vw; font-size: 11px; letter-spacing: 0.06em; color: var(--dim);
@@ -118,6 +126,9 @@
   .controls kbd { font: inherit; color: var(--paper); border: 1px solid rgba(243, 233, 214, 0.35); padding: 0 5px; }
   .tip { margin: 0; font-size: 13px; color: var(--paper); border-left: 2px solid var(--cinnabar); padding-left: 12px; }
   .tip .cjk { color: var(--cinnabar); }
+  .tips { display: grid; gap: 8px; }
+  .tip.jade { border-left-color: var(--jade); }
+  .tip.jade .cjk { color: var(--jade); }
   .actions { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; }
   .cta {
     min-width: 200px; padding: 14px 30px; border: 0; cursor: pointer;
@@ -135,6 +146,8 @@
   .stats div { border-top: 1px solid rgba(243, 233, 214, 0.25); padding-top: 8px; }
   .stats dt { font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim); }
   .stats dd { margin: 0; font-family: var(--display); font-weight: 800; font-size: 34px; font-variant-numeric: tabular-nums; }
+  .stats div:first-child { grid-column: 1 / -1; }
+  .stats div:first-child dd { font-size: 52px; line-height: 1; color: var(--amber); }
 
   /* ---------- Toque ---------- */
   #touch { position: absolute; inset: 0; pointer-events: none; }
@@ -167,6 +180,7 @@
     .backdrop { display: none; }
     #combo { top: 22%; }
     #meter { top: calc(env(safe-area-inset-top, 0px) + 84px); left: max(18px, env(safe-area-inset-left, 0px)); right: auto; }
+    .boss { top: calc(env(safe-area-inset-top, 0px) + 108px); width: calc(100% - 36px); justify-items: start; left: 18px; transform: none; }
     .vital { width: 56vw; }
   }
   @media (prefers-reduced-motion: reduce) {
@@ -193,6 +207,7 @@
       <div class="bar" role="img" aria-label="Vida"><i id="hpGhost"></i><i id="hpFill"></i></div>
     </div>
     <div class="foes"><span class="cjk">敵</span><b id="foeCount">3</b><small>restantes</small></div>
+    <div class="boss" id="boss"><span>DON VITTORE</span><div class="bar"><i id="bossFill"></i></div></div>
     <div id="combo" aria-live="polite"><b id="comboNum">0</b><div class="lbl"><span>COMBO</span><span class="cjk">連擊</span></div></div>
     <div id="meter"><i></i><i></i><i></i><i></i><i></i><span>F · Finalizar</span></div>
     <div id="callout" data-tone="jade"></div>
@@ -210,9 +225,9 @@
   <section id="title" class="overlay" aria-labelledby="gameTitle">
     <div class="backdrop" aria-hidden="true">旺角</div>
     <div class="sheet">
-      <p class="kicker">Protótipo jogável 01 · Kowloon, 02:40</p>
+      <p class="kicker">Protótipo jogável 02 · Kowloon, 02:40</p>
       <h1 id="gameTitle"><span class="cjk">旺角後巷</span>Beco de Mong Kok</h1>
-      <p class="lead">Chuva sobre o asfalto, neon nas poças e três capangas bloqueando a saída. Encadeie golpes sem perder o ritmo, leia o perigo e responda no tempo certo.</p>
+      <p class="lead">Chuva sobre o asfalto, neon nas poças e a família Vittore fechando a saída do beco: Don Vittore, Luca Moretti e Salvatore Ricci. Encadeie golpes, leia o perigo e responda no tempo certo.</p>
       <dl class="controls">
         <div><dt>Mover</dt><dd><kbd>WASD</kbd> ou setas · analógico</dd></div>
         <div><dt>Atacar</dt><dd><kbd>J</kbd> ou clique · □ / X</dd></div>
@@ -222,7 +237,10 @@
         <div><dt>Câmera</dt><dd><kbd>Q</kbd> <kbd>E</kbd> · analógico direito</dd></div>
       </dl>
       <p class="lead touch-help">Joystick à esquerda para mover. À direita: <b>ATACAR</b>, <b>CONTRA</b> (contra-atacar), <b>ESQUIVA</b> e <b>FINAL</b> (finalização após 5 acertos).</p>
-      <p class="tip">Quando o sinal <span class="cjk">危</span> acender sobre um inimigo, contra-ataque antes do golpe chegar.</p>
+      <div class="tips">
+        <p class="tip"><span class="cjk">危</span> sobre um inimigo: golpe a caminho. Contra-ataque.</p>
+        <p class="tip jade"><span class="cjk">閃</span> e linha de mira em você: tiro a caminho. Esquive para sair da linha.</p>
+      </div>
       <div class="actions">
         <button id="startBtn" class="cta" disabled>Carregando o beco…</button>
         <button id="soundBtn" class="ghost" aria-pressed="true">Som: ligado</button>

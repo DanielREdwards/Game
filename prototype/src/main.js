@@ -9,18 +9,19 @@ import { FX } from './fx.js';
 import { Sfx } from './audio.js';
 import { HUD } from './hud.js';
 import { CameraRig } from './camera.js';
+import { makeLooks } from './characters.js';
 import { damp, flatDist } from './util.js';
 
 const SPAWNS = [
-  ['floral', [-3.2, 0, -3.0]],
-  ['track', [3.4, 0, -2.4]],
-  ['brute', [0.4, 0, -5.0]],
+  ['moretti', [-3.2, 0, -3.0]],
+  ['ricci', [3.4, 0, -2.6]],
+  ['vittore', [0.4, 0, -5.0]],
 ];
 
 async function loadFonts() {
   if (!document.fonts) return;
-  const sample = '茶餐廳麻雀館耍樂金龍酒家夜宵按摩足底夜總會旅館藥房粥麵飯糖水大押小時危的士慢旺角啟敵連擊0123456789';
-  const faces = ['900 64px "Noto Sans TC"', '900 64px "Big Shoulders Display"', '500 16px "IBM Plex Mono"'];
+  const sample = '茶餐廳麻雀館耍樂金龍酒家夜宵按摩足底夜總會旅館藥房粥麵飯糖水大押小時危閃的士慢旺角啟敵連擊香港洪門0123456789';
+  const faces = ['900 64px "Noto Sans TC"', '900 64px "Noto Serif TC"', '900 64px "Big Shoulders Display"', '500 16px "IBM Plex Mono"'];
   await Promise.race([
     Promise.all(faces.map((f) => document.fonts.load(f, sample).catch(() => null))),
     new Promise((r) => setTimeout(r, 3500)),
@@ -45,12 +46,13 @@ class Game {
     this.elapsed = 0;
     this.paused = false;
     this.last = 0;
-    this.stats = { time: 0, maxCombo: 0, counters: 0, hitsTaken: 0 };
+    this.stats = { time: 0, maxCombo: 0, counters: 0, dodged: 0, hitsTaken: 0 };
   }
 
   async init() {
     await loadFonts();
     this.fx = new FX(this.scene);
+    this.looks = makeLooks();
     this.world = buildWorld(this.scene, this.renderer.renderer);
     this.player = new Player(this);
     this.enemies = SPAWNS.map(([kind, pos], i) => new Enemy(this, kind, pos, i));
@@ -74,7 +76,7 @@ class Game {
     this.player.reset();
     for (const e of this.enemies) e.reset();
     this.director.reset();
-    this.stats = { time: 0, maxCombo: 0, counters: 0, hitsTaken: 0 };
+    this.stats = { time: 0, maxCombo: 0, counters: 0, dodged: 0, hitsTaken: 0 };
     this.elapsed = 0;
     this.timeScale = this.targetScale = 1;
     this.cam.mode = 'play';
@@ -82,6 +84,7 @@ class Game {
     this.cam.cinematic(false);
     this.cam.focus.set(0, 1.15, 2.4);
     this.hud.foes(this.enemies.length);
+    this.hud.boss(1);
     this.hud.showPlay();
     this.hud.callout('Lute!', 'amber');
     this.state = 'play';
