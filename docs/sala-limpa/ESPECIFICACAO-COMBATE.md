@@ -1,6 +1,6 @@
 # Especificação Funcional — Combate de Fluxo Livre
 
-**Status:** aprovada para implementação · protótipo 01, ampliada no protótipo 02 (seção 7-A)
+**Status:** aprovada para implementação · protótipo 01, ampliada no protótipo 02 (seção 7-A) e no protótipo 03 (seções 11 a 15)
 **Fonte:** convenções públicas do gênero de ação corpo a corpo em terceira pessoa, descritas em linguagem própria. Nenhum valor, arte ou texto foi extraído de jogo de terceiros.
 
 > Esta especificação descreve **ideias e regras de jogo**, matéria não protegida nos termos da Lei nº 9.610/1998, art. 8º, I e II. Todos os elementos de **expressão** (nomes, aparência, sinais visuais, sons e valores numéricos) foram criados para este projeto.
@@ -135,3 +135,75 @@ Respeita-se a preferência do sistema por movimento reduzido: tremor e pulso sã
 | Câmera | Q / E | Analógico direito | — |
 
 O mapeamento de botões segue convenções funcionais de controles de videogame, que não constituem expressão protegida.
+
+## 11. Determinação (protótipo 03)
+
+Recurso de 0 a 5 pontos, exibido junto à barra de vida.
+
+| Ganho | Pontos |
+|---|---|
+| Acerto | +0,4 |
+| Inimigo contra-atacado | +1 |
+| Rajada esquivada por inteiro | +1 |
+| Inimigo nocauteado | +0,5 |
+
+| Uso | Custo | Efeito |
+|---|---|---|
+| **Finalização** (F / ○ / FINAL) | 3 | Regra da seção 5, que deixa de exigir combo |
+| **Cura** (H / LB / CURAR) | 2 | Recupera 35 de vida após 0,6 s de concentração. Se o protagonista for atingido nesse intervalo, a cura é cancelada e nada é gasto |
+
+A determinação não zera ao quebrar o combo.
+
+## 12. Precisão recompensada
+
+- **Contra-ataque perfeito:** dentro dos últimos 30 % da preparação inimiga. Gera câmera lenta de 0,35 s, dano dobrado, +1 ponto extra de determinação e o aviso "PERFEITO".
+- **Esquiva perfeita:** iniciada até 0,15 s antes do primeiro disparo de uma rajada. Gera câmera lenta breve e o aviso "ESQUIVA PERFEITA".
+
+## 13. Armas do chão
+
+Poucas unidades espalhadas pelo mapa. Brilham de leve para serem notadas.
+
+| Arma | Usos | Dano | Particularidade |
+|---|---|---|---|
+| Garrafa de vidro | 1 | 4 | Derruba; estilhaça |
+| Pau | 4 | 2 | Alcance +0,25 m; lascas ao quebrar |
+| Pé de cabra | 8 | 3 | Derruba no 3º golpe seguido |
+| Cano de ferro | 6 | 2,5 | Largado por capangas armados |
+
+- **Pegar e largar:** E / RB / botão PEGAR, que aparece no toque quando há arma por perto.
+- **Golpes com arma:** sequência própria (diagonal, horizontal, revés).
+- **Contra-ataque e finalização** continuam disponíveis com a arma na mão.
+- **Fim da arma:** com os usos esgotados, ela se quebra e as mãos ficam livres.
+
+## 14. Ondas
+
+| Onda | Zona | Inimigos | Confronto |
+|---|---|---|---|
+| 1 | Beco | 4 soldados: 3 de punho, 1 com cano | Não |
+| 2 | Rua Fa Yuen | 5 soldados: 2 com cano, 1 brutamontes; chegam pelos dois lados da rua | Sim |
+| 3 | Mercado | Luca Moretti, Salvatore Ricci e 3 soldados | Sim |
+| 4 | Templo de Tin Hau | Don Vittore e 2 soldados | Sim, com os soldados; depois, o chefe |
+
+- **Abertura:** cada onda começa com um cartão caligráfico (第一波 a 第四波, mais o nome da zona) e faixas de cinema.
+- **Ao vencer uma onda:** +25 de vida e +1 de determinação. O **vento-guia** (folhas, pétalas e rastros de vento) sopra em direção à próxima zona, e a onda seguinte começa ao entrar nela.
+- **Derrota:** "Tentar de novo" reinicia a onda atual com vida cheia e 2 de determinação. "Recomeçar" volta ao início.
+
+**Soldados da família Vittore:**
+
+| Tipo | Vida | Dano | Velocidade |
+|---|---|---|---|
+| De punho | 4 | 12 | Normal |
+| Com cano | 5 | 16 | Normal |
+| Brutamontes | 8 | 20 | Lento |
+
+Todos os golpes de soldados são contra-atacáveis.
+
+## 15. Confronto
+
+1. **Desafio.** No início das ondas 2, 3 e 4, os inimigos param a cerca de 8 m. Aparecem o aviso "Segure CONTRA para o confronto" e faixas de cinema.
+2. **Recusar.** Atacar recusa o confronto e inicia a luta normal.
+3. **Aceitar.** Segurar contra-atacar (K / △ / CONTRA) faz o primeiro adversário caminhar até cerca de 3 m. Após 1,0 a 3,0 s, ele ataca. Antes disso pode fingir o ataque até duas vezes, com um tranco sem brilho.
+4. **Sinal de ataque.** Um **brilho de estrela** acende no adversário. Soltar o botão em até 0,4 s derruba o adversário em câmera lenta.
+5. **Encadeamento.** Até três adversários, cada um mais rápido que o anterior.
+6. **Erro.** Soltar antes do brilho, inclusive durante uma finta, ou tarde demais custa um golpe de 20 de vida, e a luta começa.
+7. **Chefe.** Don Vittore não participa do confronto.
