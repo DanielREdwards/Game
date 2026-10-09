@@ -66,6 +66,15 @@ export class Renderer {
     const rt = new THREE.WebGLRenderTarget(16, 16, { type: THREE.HalfFloatType, samples: 4 });
     const comp = (this.composer = new EffectComposer(r, rt));
     comp.addPass(new RenderPass(scene, camera));
+    // Saneamento HDR: um único pixel NaN/infinito espalhado pelo bloom deixa a tela inteira preta em algumas GPUs.
+    comp.addPass(new ShaderPass({
+      uniforms: { tDiffuse: { value: null } },
+      vertexShader: 'varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+      fragmentShader: `uniform sampler2D tDiffuse; varying vec2 vUv;
+        void main() { vec4 c = texture2D(tDiffuse, vUv);
+          bool bad = any(isnan(c.rgb)) || any(isinf(c.rgb));
+          gl_FragColor = vec4(bad ? vec3(0.0) : clamp(c.rgb, 0.0, 64.0), 1.0); }`,
+    }));
     this.bloom = new UnrealBloomPass(new THREE.Vector2(256, 256), 0.72, 0.5, 1.0);
     comp.addPass(this.bloom);
     comp.addPass(new OutputPass());
