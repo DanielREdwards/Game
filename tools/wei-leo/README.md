@@ -34,6 +34,7 @@ Downloads, caches e imagens de conferência ficam em `tools/wei-leo/work/`, ou n
 | `finish.py`, `build.py` | Preenche lacunas por material, atenua os brilhos especulares da foto e estende as ilhas do UV |
 | `hair.py`, `extras.py` | Cabelo em mechas, olhos, corrente com plaqueta, argolas e fivela |
 | `assemble.py`, `export.py`, `gltf.py` | Mapa de relevo e de rugosidade e gravação do `.glb` (glTF 2.0 com pele e esqueleto) |
+| `pack.py` | Empacota o `.glb` em base64 dentro de `wei-leo.glb.json`, para servidores que não entregam `.glb` (como a página publicada). O jogo tenta o `.glb` e depois o `.json`; sem nenhum dos dois, usa o Wei Leo esculpido |
 | `compare.py`, `sheet.py`, `preview.py` | Conferência: reprojeção lado a lado com a ficha, folhas de anotação com grade e prévias rápidas |
 
 ## O que o `.glb` contém

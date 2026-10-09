@@ -10,7 +10,7 @@ import { paintBody, paintHead, eyeTex, hairTex } from './body/paint.js';
 const CAST = {
   hero: {
     name: 'Wei Leo', rim: 0x5fe8ff, rimStrength: 0.22, scale: 1,
-    model: '../assets/wei-leo.glb',
+    model: ['../assets/wei-leo.glb', '../assets/wei-leo.glb.json'],
     // versão esculpida, usada só se o modelo não puder ser carregado
     fallback: {
       rimStrength: 0.28,
@@ -130,33 +130,49 @@ async function sculpt(list, onProgress) {
   return looks;
 }
 
-// Baixa um modelo pronto (.glb). As texturas embutidas são abertas como imagem (<img>), não por fetch.
-function loadModel(url, onProgress) {
+// Baixa um modelo pronto: o .glb ou, onde o servidor não entrega .glb (como na página publicada), o mesmo
+// arquivo em base64 dentro de um .json ({ "glb": "..." }, gerado por tools/wei-leo/pack.py).
+// As texturas embutidas são abertas como imagem (<img>), não por fetch.
+async function loadModel(urls) {
   const loader = new GLTFLoader();
   loader.register((parser) => {
     parser.textureLoader = new TextureLoader(parser.options.manager);
     return { name: 'texturas-por-imagem' };
   });
-  return loader.loadAsync(new URL(url, import.meta.url).href, (e) => { if (e.total) onProgress(e.loaded / e.total); });
+  let error;
+  for (const url of urls) {
+    try {
+      const res = await fetch(new URL(url, import.meta.url));
+      if (!res.ok) throw new Error(`${url}: ${res.status}`);
+      let data;
+      if (url.endsWith('.json')) {
+        const bin = atob((await res.json()).glb);
+        data = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) data[i] = bin.charCodeAt(i);
+        data = data.buffer;
+      } else data = await res.arrayBuffer();
+      return await loader.parseAsync(data, '');
+    } catch (e) {
+      error = e;
+    }
+  }
+  throw error;
 }
 
 // Prepara todos os visuais: modelos prontos baixam enquanto os demais são gerados.
 export async function loadCharacters(onProgress = () => {}) {
   const entries = Object.entries(CAST);
-  let sculptP = 0, fileP = 0;
-  const report = () => onProgress(sculptP * 0.7 + fileP * 0.3);
   const models = {};
-  const files = Promise.all(entries.filter(([, c]) => c.model).map(([id, c]) => loadModel(c.model, (p) => { fileP = p; report(); })
+  const files = Promise.all(entries.filter(([, c]) => c.model).map(([id, c]) => loadModel(c.model)
     .then((g) => { models[id] = g; })
     .catch((err) => console.warn(`Modelo de ${c.name} indisponível; usando a versão esculpida.`, err?.message || err))));
-  const looks = await sculpt(entries.filter(([, c]) => !c.model), (p) => { sculptP = p; report(); });
+  const looks = await sculpt(entries.filter(([, c]) => !c.model), (p) => onProgress(p * 0.9));
   await files;
   for (const [id, c] of entries) {
     if (!c.model) continue;
     if (models[id]) looks[id] = { ...c, id, gltf: models[id] };
     else Object.assign(looks, await sculpt([[id, { ...c, ...c.fallback }]], () => {}));
   }
-  fileP = 1;
-  report();
+  onProgress(1);
   return looks;
 }

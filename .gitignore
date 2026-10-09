@@ -5,3 +5,4 @@ node_modules
 # pipeline do Wei Leo: downloads e caches
 tools/wei-leo/work/
 __pycache__/
+prototype/assets/*.glb.json
