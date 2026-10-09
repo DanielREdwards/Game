@@ -1,4 +1,4 @@
-# Noite em Mong Kok — protótipo jogável 03
+# Noite em Mong Kok — protótipo jogável 04
 
 Protótipo de jogo de ação em terceira pessoa ambientado em um quarteirão de Kowloon, à noite, sob chuva. Wei Leo atravessa quatro zonas (o beco, a Rua Fa Yuen, o mercado noturno e o pátio do templo de Tin Hau) e enfrenta quatro ondas da família Vittore: soldados de rua, Luca Moretti, Salvatore Ricci e, por fim, Don Vittore.
 
@@ -6,7 +6,9 @@ O combate é corpo a corpo de fluxo livre, com tiros a esquivar, armas improvisa
 
 Os personagens seguem a arte conceitual do titular, em [`docs/arte-conceitual/`](docs/arte-conceitual/), e a [especificação de personagens](docs/sala-limpa/ESPECIFICACAO-PERSONAGENS.md). O mapa segue a [especificação do mapa](docs/sala-limpa/ESPECIFICACAO-MAPA.md). Ondas, confronto, determinação e armas do chão seguem a [especificação de combate](docs/sala-limpa/ESPECIFICACAO-COMBATE.md), seções 11 a 16.
 
-Os modelos, o cenário, as texturas (inclusive as tatuagens), as animações e os sons são **gerados por procedimento** no próprio código. Nenhum arquivo ou código de outros jogos foi usado. O processo segue o protocolo de [sala limpa](docs/sala-limpa/PROTOCOLO.md).
+O protagonista, Wei Leo, é um **modelo realista** (`prototype/assets/wei-leo.glb`): uma base humana de domínio público (CC0, MakeHuman) ajustada à ficha do titular, com a pele, as tatuagens, o rosto e a calça **projetados da própria ficha**. O processo é reproduzível em [`tools/wei-leo/`](tools/wei-leo/README.md) e está descrito na [especificação de personagens](docs/sala-limpa/ESPECIFICACAO-PERSONAGENS.md), seção 8.
+
+Os antagonistas, o cenário, as demais texturas, as animações e os sons são **gerados por procedimento** no próprio código. Nenhum arquivo ou código de outros jogos foi usado. O processo segue o protocolo de [sala limpa](docs/sala-limpa/PROTOCOLO.md).
 
 ## Como jogar
 
@@ -58,7 +60,8 @@ Depois, abra `http://localhost:3000` (serve) ou `http://localhost:8080` (Python)
 - Resolução interna adaptativa.
 
 **Personagens**
-- Corpos contínuos (sem juntas aparentes) esculpidos por campo de distância: tronco descrito por seções medidas de um adulto, membros com perfil de músculos ou de tecido, extraídos por *surface nets* e deformados por esqueleto.
+- Wei Leo realista: anatomia de base humana CC0, rosto ajustado aos 478 pontos faciais da ficha, pele projetada da ficha em sete vistas (frente, costas, lado, rosto de frente e de perfil, e espelhos), cabelo em 585 mechas com franja e laterais em degradê, olhos com íris e verniz, corrente com plaqueta, argolas, fivela, calça cargo larga e tênis sem marca.
+- Antagonistas com corpos contínuos (sem juntas aparentes) esculpidos por campo de distância: tronco descrito por seções medidas de um adulto, membros com perfil de músculos ou de tecido, extraídos por *surface nets* e deformados por esqueleto.
 - Cabeças adultas esculpidas (mandíbula, arcadas, maçãs, nariz, lábios, orelhas), olhos em decalque amendoado, sobrancelhas fio a fio, barba e cabelo com topo desfiado.
 - Wei Leo, Don Vittore, Luca Moretti, Salvatore Ricci e quatro tipos de soldado (dois de punho, com cano e brutamontes), com ternos dos anos 1930, sobretudo aberto, camisas, coletes, boinas e fedoras torneados.
 - Geração em Web Workers durante o carregamento.
@@ -79,6 +82,7 @@ Depois, abra `http://localhost:3000` (serve) ou `http://localhost:8080` (Python)
 ```
 prototype/
   index.html          interface (tela inicial, HUD, cartões de onda, pausa, tela final, toque)
+  assets/wei-leo.glb  Wei Leo realista (glTF 2.0: malha com pele, esqueleto do jogo, cabelo, olhos, acessórios)
   src/
     main.js           laço principal, estados do jogo, pausa e "tentar de novo"
     renderer.js       HDR, bloom, gradação, modo P&B, resolução adaptativa
@@ -96,7 +100,7 @@ prototype/
     body/paint.js     pintura de pele, tatuagens, roupas, rostos e olhos
     body/factory.js   esqueletos e geração em Web Workers
     body/worker.js    trabalhador de geração de malhas
-    rig.js            personagem com pele, cabeça, olhos, chapéus e acessórios
+    rig.js            personagem: modelo .glb (Wei Leo) ou corpo esculpido, com olhos, chapéus e acessórios
     characters.js     elenco (protagonista, chefes e soldados)
     bodytex.js        dragões e nuvens das tatuagens; relevo → mapa de normais
     weapons.js        armas de fogo genéricas e armas do chão
@@ -113,6 +117,7 @@ prototype/
     audio.js          áudio sintetizado
     input.js          teclado, mouse, controle e toque (inclusive botões segurados)
     hud.js            interface
+tools/wei-leo/        pipeline em Python que gera o wei-leo.glb a partir da ficha e da base CC0
 docs/
   sala-limpa/PROTOCOLO.md                 regras jurídicas do desenvolvimento
   sala-limpa/ESPECIFICACAO-COMBATE.md     combate, determinação, armas do chão, ondas e confronto
@@ -122,9 +127,15 @@ docs/
   PROVENIENCIA.md                         origem e licença de cada componente
 ```
 
+## Créditos de terceiros
+
+- Base humana, esqueleto, pesos e alvos de forma do Wei Leo: **MakeHuman Team** (www.makehumancommunity.org; Data Collection AB, Joel Palmius e Jonas Hauquier), assets em CC0 1.0.
+- three.js (MIT) e fontes do Google Fonts (SIL Open Font License 1.1). Detalhes em [`docs/PROVENIENCIA.md`](docs/PROVENIENCIA.md).
+
 ## Próximos passos sugeridos
 
-1. Animação por captura de movimento própria e roupas com simulação de tecido.
-2. Portar o combate para Unreal Engine 5 (Gameplay Ability System + Motion Warping); o mapa e as ondas viram níveis e *data assets*.
-3. Tráfego e multidão no quarteirão, com NPCs que reagem à luta.
-4. Inimigos com bloqueio e desarme de atiradores no corpo a corpo.
+1. Aplicar o mesmo pipeline à família Vittore (ficha `docs/arte-conceitual/familia-vittore.png`), para que antagonistas e protagonista tenham o mesmo nível de realismo.
+2. Animação por captura de movimento própria e roupas com simulação de tecido.
+3. Portar o combate para Unreal Engine 5 (Gameplay Ability System + Motion Warping); o mapa e as ondas viram níveis e *data assets*.
+4. Tráfego e multidão no quarteirão, com NPCs que reagem à luta.
+5. Inimigos com bloqueio e desarme de atiradores no corpo a corpo.

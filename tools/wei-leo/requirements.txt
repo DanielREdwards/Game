@@ -1,0 +1,5 @@
+numpy>=2.0
+scipy>=1.13
+opencv-python-headless>=4.10
+pillow>=10.0
+mediapipe>=0.10

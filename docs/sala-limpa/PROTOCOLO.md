@@ -86,7 +86,13 @@ Em equipe reduzida, quando a mesma pessoa acumular papéis, o histórico de vers
 
 O protótipo 01 foi escrito a partir de conhecimento geral de desenvolvimento de jogos e de convenções públicas do gênero, descritas na especificação `ESPECIFICACAO-COMBATE.md`.
 
-Não houve acesso a binários, arquivos ou código de jogos comerciais. Personagens, cenário, texturas e sons são **gerados por procedimento** no próprio código, conforme registrado em `docs/PROVENIENCIA.md`.
+Não houve acesso a binários, arquivos ou código de jogos comerciais. Antagonistas, cenário, texturas e sons são **gerados por procedimento** no próprio código, conforme registrado em `docs/PROVENIENCIA.md`.
+
+No protótipo 04, o protagonista passou a ser um modelo realista (especificação de personagens, seção 8). Os únicos insumos externos são:
+- a **ficha do próprio titular**, cujo uso ele autorizou expressamente;
+- uma **base humana em domínio público** (CC0, MakeHuman), baixada do repositório oficial e creditada.
+
+A ferramenta de detecção de pontos (MediaPipe, Apache 2.0) é usada só na preparação e não integra o jogo. Nenhum modelo, textura ou personagem de jogo comercial entrou no processo.
 
 ---
 

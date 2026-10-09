@@ -2,6 +2,7 @@
 // A interface (juntas em this.j, applyPose, world, updateShadow) é a mesma usada pelo combate.
 import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
+import { clone as cloneSkinned } from 'three/addons/utils/SkeletonUtils.js';
 import { JOINTS } from './poses.js';
 import { makeTommy, makePistol, makePipe } from './weapons.js';
 import { makeSkeleton } from './body/factory.js';
@@ -60,6 +61,24 @@ export function makeCharMaterial(params, fx) {
   return m;
 }
 
+// Converte os materiais do .glb para os do jogo (contorno colorido e clarão ao ser atingido).
+function modelMaterial(m, std) {
+  if (m.name === 'olho') {
+    const e = new THREE.MeshPhysicalMaterial({ map: m.map, roughness: 0.2, clearcoat: 1, clearcoatRoughness: 0.03 });
+    e.name = m.name;
+    return e;
+  }
+  const p = {};
+  for (const k of ['map', 'normalMap', 'normalScale', 'roughnessMap', 'metalnessMap', 'color', 'roughness', 'metalness']) {
+    if (m[k] !== undefined && m[k] !== null) p[k] = m[k];
+  }
+  if (m.name === 'cabelo') Object.assign(p, { alphaTest: 0.5, alphaToCoverage: true, side: THREE.DoubleSide, roughness: 0.62 });
+  if (m.name === 'corpo') p.normalScale = m.normalScale.clone().multiplyScalar(0.9);
+  const out = std(p);
+  out.name = m.name;
+  return out;
+}
+
 export class Rig {
   constructor(look, scale, blobMat) {
     this.fx = {
@@ -81,6 +100,26 @@ export class Rig {
     this.body.position.y = -0.55 * scale;
     this.body.scale.setScalar(scale);
 
+    this.seg = SEG; // medidas da perna para apoiar o pé no chão
+    this.mesh = null;
+    this.ember = null;
+    if (look.gltf) this.buildModel(look, std);
+    else this.buildSculpted(look, std);
+
+    // arma na mão direita
+    this.muzzle = null;
+    this.weapon = null;
+    this.held = null;
+    if (look.weapon) this.setWeapon(look.weapon);
+
+    this.shadow = new THREE.Mesh(geo('blob', () => new THREE.PlaneGeometry(1, 1)), blobMat);
+    this.shadow.rotation.x = -Math.PI / 2;
+    this.shadow.renderOrder = 1;
+    this.shadowBase = 1.2 * scale;
+  }
+
+  // Personagem esculpido por código (campos de distância): elenco da família Vittore e soldados.
+  buildSculpted(look, std) {
     // esqueleto próprio (cada instância) sobre a geometria compartilhada
     const { B, list } = makeSkeleton(look.wide);
     this.j = B;
@@ -150,7 +189,6 @@ export class Rig {
       add(geo('bridge', () => new THREE.BoxGeometry(0.022, 0.003, 0.003)), fm, head, 0, EYE.y + 0.006, 0.094);
       for (const s of [1, -1]) add(geo('temple', () => new THREE.BoxGeometry(0.003, 0.003, 0.085)), fm, head, s * 0.0765, EYE.y + 0.004, 0.045, 0, s * 0.12, 0);
     }
-    this.ember = null;
     if (A.smoke) {
       const big = A.smoke === 'cigar';
       const holder = new THREE.Group();
@@ -173,17 +211,24 @@ export class Rig {
       const sm = metal(0xd8dade, 0.16);
       for (const s of [1, -1]) add(geo('earring', () => new THREE.TorusGeometry(0.0085, 0.0022, 6, 14)), sm, head, s * 0.082, 0.064, -0.006, 0, Math.PI / 2, 0).castShadow = false;
     }
+  }
 
-    // arma na mão direita
-    this.muzzle = null;
-    this.weapon = null;
-    this.held = null;
-    if (look.weapon) this.setWeapon(look.weapon);
-
-    this.shadow = new THREE.Mesh(geo('blob', () => new THREE.PlaneGeometry(1, 1)), blobMat);
-    this.shadow.rotation.x = -Math.PI / 2;
-    this.shadow.renderOrder = 1;
-    this.shadowBase = 1.2 * scale;
+  // Personagem de modelo pronto (.glb): base humana realista com a pele projetada da ficha do titular.
+  // Os ossos têm os mesmos nomes do esqueleto do jogo; cabelo, olhos e acessórios já vêm no arquivo.
+  buildModel(look, std) {
+    const scene = cloneSkinned(look.gltf.scene);
+    const B = {};
+    scene.traverse((o) => {
+      if (o.name && !B[o.name]) B[o.name] = o;
+      if (!o.isMesh) return;
+      o.castShadow = o.material.name !== 'olho';
+      o.frustumCulled = false;
+      o.material = modelMaterial(o.material, std);
+      if (o.material.name === 'corpo') this.mesh = o;
+    });
+    this.j = B;
+    this.seg = scene.getObjectByName('wei-leo')?.userData.seg || SEG;
+    this.body.add(scene);
   }
 
   // Troca o que está na mão direita: 'tommy', 'pistol', 'pipe' ou um objeto 3D (arma do chão).
@@ -221,7 +266,8 @@ export class Rig {
       _q.setFromEuler(_e);
       this.j[s + 'Ank'].quaternion.slerp(_q, a);
     }
-    const leg = (h, k) => SEG.HIP_DROP + Math.cos(h[2]) * (SEG.UPPER * Math.cos(h[0]) + SEG.LOWER * Math.cos(h[0] + k[0])) + SEG.SOLE;
+    const S = this.seg;
+    const leg = (h, k) => S.HIP_DROP + Math.cos(h[2]) * (S.UPPER * Math.cos(h[0]) + S.LOWER * Math.cos(h[0] + k[0])) + S.SOLE;
     const target = Math.max(leg(p.lHip, p.lKn), leg(p.rHip, p.rKn)) + (p.hy || 0);
     this.j.hips.position.y += (target - this.j.hips.position.y) * a;
   }

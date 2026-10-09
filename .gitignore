@@ -1,3 +1,7 @@
 node_modules
 .DS_Store
 *.log
+
+# pipeline do Wei Leo: downloads e caches
+tools/wei-leo/work/
+__pycache__/

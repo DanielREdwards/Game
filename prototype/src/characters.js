@@ -1,18 +1,26 @@
 // Elenco: proporções do corpo, rosto, pintura do figurino e acessórios de cada personagem.
-// Interpretação da arte conceitual em docs/arte-conceitual/ (protagonista e chefes) e da
-// especificação dos soldados (docs/sala-limpa/ESPECIFICACAO-PERSONAGENS.md).
+// Wei Leo vem de um modelo pronto (assets/wei-leo.glb): base humana CC0 ajustada à ficha do titular,
+// com a pele projetada da própria ficha (ver tools/wei-leo/). Os demais seguem a arte conceitual
+// em docs/arte-conceitual/ e a especificação dos soldados (docs/sala-limpa/ESPECIFICACAO-PERSONAGENS.md).
+import { TextureLoader } from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { buildGeometries } from './body/factory.js';
 import { paintBody, paintHead, eyeTex, hairTex } from './body/paint.js';
 
 const CAST = {
   hero: {
-    name: 'Wei Leo', rim: 0x5fe8ff, rimStrength: 0.28, scale: 1,
-    body: ['athlete', { wide: 1.1 }],
-    head: { jaw: 1.06, chin: 1.05, brow: 1.15, nose: 1.0, cheek: 1.04 },
-    hair: 'textured', hairColor: 0x0b0a0a,
-    paint: { kind: 'hero', skin: '#c8946c' },
-    face: { seed: 5, skin: '#c8946c', iris: '#24160d', hair: '#0d0b0a', hairTop: 0.16, shaved: true, brow: '#0d0b0a', browW: 8, scar: true },
-    acc: { chain: true, tag: true, earrings: true },
+    name: 'Wei Leo', rim: 0x5fe8ff, rimStrength: 0.22, scale: 1,
+    model: '../assets/wei-leo.glb',
+    // versão esculpida, usada só se o modelo não puder ser carregado
+    fallback: {
+      rimStrength: 0.28,
+      body: ['athlete', { wide: 1.1 }],
+      head: { jaw: 1.06, chin: 1.05, brow: 1.15, nose: 1.0, cheek: 1.04 },
+      hair: 'textured', hairColor: 0x0b0a0a,
+      paint: { kind: 'hero', skin: '#c8946c' },
+      face: { seed: 5, skin: '#c8946c', iris: '#24160d', hair: '#0d0b0a', hairTop: 0.16, shaved: true, brow: '#0d0b0a', browW: 8, scar: true },
+      acc: { chain: true, tag: true, earrings: true },
+    },
   },
   vittore: {
     name: 'Don Vittore', rim: 0xff5a48, rimStrength: 0.3, scale: 1.01, weapon: 'tommy',
@@ -84,10 +92,10 @@ const CAST = {
 const bodyKey = (b) => 'body:' + b[0] + JSON.stringify(b[1]);
 const headKey = (h) => 'head:' + JSON.stringify(h);
 
-// Gera malhas (em paralelo) e pinta texturas. Devolve os visuais prontos para o Rig.
-export async function loadCharacters(onProgress = () => {}) {
+// Gera malhas (em paralelo) e pinta texturas dos personagens esculpidos. list: [[id, especificação], ...].
+async function sculpt(list, onProgress) {
   const jobs = new Map();
-  for (const c of Object.values(CAST)) {
+  for (const [, c] of list) {
     jobs.set(bodyKey(c.body), { key: bodyKey(c.body), kind: 'body', args: c.body });
     jobs.set(headKey(c.head), { key: headKey(c.head), kind: 'head', args: [c.head] });
     if (c.hair) jobs.set('hair:' + c.hair, { key: 'hair:' + c.hair, kind: 'hair', args: [c.hair] });
@@ -96,18 +104,17 @@ export async function loadCharacters(onProgress = () => {}) {
   const report = () => onProgress(geoP * 0.75 + paintP * 0.25);
   const pending = buildGeometries([...jobs.values()], (p) => { geoP = p; report(); });
   const tex = {};
-  const entries = Object.entries(CAST);
-  for (let i = 0; i < entries.length; i++) {
-    const [id, c] = entries[i];
+  for (let i = 0; i < list.length; i++) {
+    const [id, c] = list[i];
     const hair = c.hair ? hairTex(c.face.hair, c.face.seed) : null;
     tex[id] = { ...paintBody(c.paint), head: paintHead(c.face), eye: eyeTex(c.face.iris), hair: hair?.map, hairN: hair?.normalMap };
-    paintP = (i + 1) / entries.length;
+    paintP = (i + 1) / list.length;
     report();
     await new Promise((r) => setTimeout(r, 0));
   }
   const geos = await pending;
   const looks = {};
-  for (const [id, c] of entries) {
+  for (const [id, c] of list) {
     looks[id] = {
       ...c,
       id,
@@ -120,5 +127,36 @@ export async function loadCharacters(onProgress = () => {}) {
       },
     };
   }
+  return looks;
+}
+
+// Baixa um modelo pronto (.glb). As texturas embutidas são abertas como imagem (<img>), não por fetch.
+function loadModel(url, onProgress) {
+  const loader = new GLTFLoader();
+  loader.register((parser) => {
+    parser.textureLoader = new TextureLoader(parser.options.manager);
+    return { name: 'texturas-por-imagem' };
+  });
+  return loader.loadAsync(new URL(url, import.meta.url).href, (e) => { if (e.total) onProgress(e.loaded / e.total); });
+}
+
+// Prepara todos os visuais: modelos prontos baixam enquanto os demais são gerados.
+export async function loadCharacters(onProgress = () => {}) {
+  const entries = Object.entries(CAST);
+  let sculptP = 0, fileP = 0;
+  const report = () => onProgress(sculptP * 0.7 + fileP * 0.3);
+  const models = {};
+  const files = Promise.all(entries.filter(([, c]) => c.model).map(([id, c]) => loadModel(c.model, (p) => { fileP = p; report(); })
+    .then((g) => { models[id] = g; })
+    .catch((err) => console.warn(`Modelo de ${c.name} indisponível; usando a versão esculpida.`, err?.message || err))));
+  const looks = await sculpt(entries.filter(([, c]) => !c.model), (p) => { sculptP = p; report(); });
+  await files;
+  for (const [id, c] of entries) {
+    if (!c.model) continue;
+    if (models[id]) looks[id] = { ...c, id, gltf: models[id] };
+    else Object.assign(looks, await sculpt([[id, { ...c, ...c.fallback }]], () => {}));
+  }
+  fileP = 1;
+  report();
   return looks;
 }
